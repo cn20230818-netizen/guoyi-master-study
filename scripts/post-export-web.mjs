@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const dist = resolve(root, 'dist');
+const customDomain = 'www.guoyinaobing.cn';
 const copies = [
   ['web-static/privacy-policy.html', 'dist/privacy-policy.html'],
   ['web-static/support.html', 'dist/support.html'],
@@ -26,5 +27,6 @@ const githubPagesHtml = indexHtml.replace(
 await writeFile(indexPath, githubPagesHtml);
 await writeFile(resolve(dist, '404.html'), githubPagesHtml);
 await writeFile(resolve(dist, '.nojekyll'), '');
+await writeFile(resolve(dist, 'CNAME'), `${customDomain}\n`);
 
 console.log('Prepared dist/ for GitHub Pages deployment.');

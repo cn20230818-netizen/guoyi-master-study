@@ -6,7 +6,7 @@
 
 ## 当前建议
 
-- 优先注册：`guoyinaobing.cn`
+- 已注册：`guoyinaobing.cn`
 - 建议正式访问域名使用：`www.guoyinaobing.cn`
 - 根域名：`guoyinaobing.cn`
 
@@ -34,6 +34,12 @@
 - 账户实名认证
 - `.cn` 域名实名资料提交
 - 支付
+
+## 当前状态
+
+- GitHub Pages 自定义域名已写入：`www.guoyinaobing.cn`
+- 当前 DNS 还未检测到解析记录
+- 下一步重点是去域名控制台补解析
 
 ## 第二步：DNS 解析配置
 

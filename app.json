@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "国医大师脑病学脉研习",
+    "slug": "guoyi-master-study",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "guoyimasterstudy",
+    "description": "以张学文、刘祖贻、凃晋文三位国医大师公开可核验文献为基础的脑病辨证学习应用。",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#efe4cf"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lucky.guoyimaster.study",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.lucky.guoyimaster.study",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#efe4cf"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": []
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "extra": {
+      "appCategory": "education-health-reference",
+      "reviewNote": "定位为中医文献学习与辨证教学辅助，不面向患者直接自动开方。"
+    }
+  }
+}

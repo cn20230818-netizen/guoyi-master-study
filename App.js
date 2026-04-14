@@ -8,6 +8,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { masters, moduleMeta, commonRedflags, orderedMasterIds } from './src/data/catalog';
@@ -21,6 +22,13 @@ const steps = [
   { key: 'redflags', label: '急重风险' },
 ];
 
+const siteLinks = {
+  website: 'https://cn20230818-netizen.github.io/guoyi-master-study/',
+  privacy: 'https://cn20230818-netizen.github.io/guoyi-master-study/privacy-policy.html',
+  support: 'https://cn20230818-netizen.github.io/guoyi-master-study/support.html',
+  github: 'https://github.com/cn20230818-netizen/guoyi-master-study',
+};
+
 function masterAnswerState(masterId) {
   const master = masters[masterId];
   const firstModule = getAvailableModules(master)[0] || null;
@@ -28,6 +36,7 @@ function masterAnswerState(masterId) {
 }
 
 function App() {
+  const { width } = useWindowDimensions();
   const [activeMasterId, setActiveMasterId] = useState('zhang');
   const [answers, setAnswers] = useState(masterAnswerState('zhang'));
   const [stepIndex, setStepIndex] = useState(0);
@@ -42,6 +51,8 @@ function App() {
   const progress = Math.round(((stepIndex + 1) / steps.length) * 100);
   const availableModules = getAvailableModules(master);
   const selectedModule = answers.module ? moduleMeta[answers.module] : null;
+  const isWide = width >= 960;
+  const isTablet = width >= 720;
 
   const switchMaster = (masterId) => {
     setActiveMasterId(masterId);
@@ -340,18 +351,42 @@ function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <View style={styles.heroTopRow}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, isWide && styles.scrollContentWide]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.hero, isWide && styles.heroWide]}>
+          <View style={[styles.heroTopRow, isWide && styles.heroTopRowWide]}>
             <View style={styles.heroCopy}>
               <Text style={styles.eyebrow}>文献驱动 · 移动端学习版</Text>
               <Text style={styles.heroTitle}>国医大师脑病学脉研习</Text>
               <Text style={styles.heroLead}>
                 将张学文、刘祖贻、凃晋文三位大师的公开可核验学术思想，整理成一个可在手机上逐步演练的学习型应用。
               </Text>
+              <View style={styles.heroActionRow}>
+                <Pressable style={styles.primaryHeroButton} onPress={() => openUrl(siteLinks.website)}>
+                  <Text style={styles.primaryHeroButtonText}>正式站点</Text>
+                </Pressable>
+                <Pressable style={styles.ghostHeroButton} onPress={() => openUrl(siteLinks.github)}>
+                  <Text style={styles.ghostHeroButtonText}>GitHub</Text>
+                </Pressable>
+                <Pressable style={styles.ghostHeroButton} onPress={() => openUrl(siteLinks.privacy)}>
+                  <Text style={styles.ghostHeroButtonText}>隐私政策</Text>
+                </Pressable>
+              </View>
             </View>
-            <View style={styles.seal}>
-              <Text style={styles.sealText}>研习</Text>
+            <View style={[styles.heroAside, isWide && styles.heroAsideWide]}>
+              <View style={styles.seal}>
+                <Text style={styles.sealText}>研习</Text>
+              </View>
+              <View style={styles.heroStatCard}>
+                <Text style={styles.heroStatValue}>3 位</Text>
+                <Text style={styles.heroStatLabel}>国医大师</Text>
+              </View>
+              <View style={styles.heroStatCard}>
+                <Text style={styles.heroStatValue}>5 步</Text>
+                <Text style={styles.heroStatLabel}>辨证引导</Text>
+              </View>
             </View>
           </View>
 
@@ -361,9 +396,55 @@ function App() {
             <BadgeText text="痰瘀热风同参" />
           </View>
 
-          <View style={styles.noticeCard}>
+          <View style={[styles.noticeCard, isWide && styles.noticeCardWide]}>
             <Text style={styles.noticeTitle}>使用边界</Text>
             <Text style={styles.noticeText}>本应用用于学习辨证思路与文献原案，不替代线下问诊、处方决策或急诊处置。</Text>
+          </View>
+        </View>
+
+        <View style={[styles.overviewGrid, isWide && styles.overviewGridWide]}>
+          <FeatureCard
+            title="大师学脉"
+            text="首页可在张学文、刘祖贻、凃晋文三位大师之间切换，先抓主张，再进入病机路径。"
+          />
+          <FeatureCard
+            title="五步演练"
+            text="从病种、病期、症状、证素到急重风险，逐步缩小辨证范围，避免一上来就盯死单一症状。"
+          />
+          <FeatureCard
+            title="结果可追溯"
+            text="结果页同时展示辨证画像、学习方路和公开文献线索，方便回到原始资料继续深学。"
+          />
+        </View>
+
+        <View style={[styles.panel, isWide && styles.panelWide]}>
+          <View style={styles.panelHeader}>
+            <View>
+              <Text style={styles.sectionEyebrow}>How To Use</Text>
+              <Text style={styles.panelTitle}>怎么使用这个网站</Text>
+            </View>
+          </View>
+          <View style={[styles.guideGrid, isTablet && styles.guideGridWide]}>
+            <GuideCard
+              step="01"
+              title="先选大师"
+              text="如果你想学脑病整体框架，先看张学文；想学恢复期拆解，看刘祖贻；想看急慢杂病兼顾，可看凃晋文。"
+            />
+            <GuideCard
+              step="02"
+              title="再选主病与病期"
+              text="优先判断中风、痫证、眩晕、失眠等入口，再分急性、恢复、久病等阶段。"
+            />
+            <GuideCard
+              step="03"
+              title="抓关键线索"
+              text="只选最能决定病机方向的几个症状和证素，不要把所有表现一股脑都选满。"
+            />
+            <GuideCard
+              step="04"
+              title="看学习输出"
+              text="结果会给出匹配路径、治法主轴、学习方路和参考文献，适合教学与继续查阅。"
+            />
           </View>
         </View>
 
@@ -372,26 +453,47 @@ function App() {
           <Text style={styles.sectionTitle}>选择国医大师</Text>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.masterRow}>
-          {orderedMasterIds.map((masterId) => {
-            const item = masters[masterId];
-            const active = masterId === activeMasterId;
-            return (
-              <Pressable
-                key={masterId}
-                style={[styles.masterCard, active && styles.masterCardActive]}
-                onPress={() => switchMaster(masterId)}
-              >
-                <Text style={styles.masterName}>{item.name}</Text>
-                <Text style={styles.masterSubtitle}>{item.title}</Text>
-                <Text style={styles.masterQuote}>{item.quote}</Text>
-                <Text style={styles.masterDoctrine}>{item.doctrine}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        {isWide ? (
+          <View style={styles.masterGrid}>
+            {orderedMasterIds.map((masterId) => {
+              const item = masters[masterId];
+              const active = masterId === activeMasterId;
+              return (
+                <Pressable
+                  key={masterId}
+                  style={[styles.masterCard, styles.masterCardGrid, active && styles.masterCardActive]}
+                  onPress={() => switchMaster(masterId)}
+                >
+                  <Text style={styles.masterName}>{item.name}</Text>
+                  <Text style={styles.masterSubtitle}>{item.title}</Text>
+                  <Text style={styles.masterQuote}>{item.quote}</Text>
+                  <Text style={styles.masterDoctrine}>{item.doctrine}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.masterRow}>
+            {orderedMasterIds.map((masterId) => {
+              const item = masters[masterId];
+              const active = masterId === activeMasterId;
+              return (
+                <Pressable
+                  key={masterId}
+                  style={[styles.masterCard, active && styles.masterCardActive]}
+                  onPress={() => switchMaster(masterId)}
+                >
+                  <Text style={styles.masterName}>{item.name}</Text>
+                  <Text style={styles.masterSubtitle}>{item.title}</Text>
+                  <Text style={styles.masterQuote}>{item.quote}</Text>
+                  <Text style={styles.masterDoctrine}>{item.doctrine}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
 
-        <View style={styles.panel}>
+        <View style={[styles.panel, isWide && styles.panelWide]}>
           <View style={styles.panelHeader}>
             <View>
               <Text style={styles.sectionEyebrow}>Study Notes</Text>
@@ -418,7 +520,7 @@ function App() {
           <Text style={styles.sectionTitle}>逐步辨证引导</Text>
         </View>
 
-        <View style={styles.panel}>
+        <View style={[styles.panel, isWide && styles.panelWide]}>
           <View style={styles.progressRow}>
             <Text style={styles.progressText}>{stepIndex + 1} / {steps.length}</Text>
             <View style={styles.progressTrack}>
@@ -460,7 +562,7 @@ function App() {
           <Text style={styles.sectionTitle}>隐私与上架准备</Text>
         </View>
 
-        <View style={styles.panel}>
+        <View style={[styles.panel, isWide && styles.panelWide]}>
           <View style={styles.blockCard}>
             <Text style={styles.blockTitle}>当前应用内隐私承诺</Text>
             <Text style={styles.blockText}>当前版本不创建账号，不上传病例，不做云端诊断，所有交互仅在本地设备内完成。</Text>
@@ -477,6 +579,24 @@ function App() {
           <Pressable style={styles.inlineButton} onPress={() => setPolicyVisible(true)}>
             <Text style={styles.inlineButtonText}>查看内置隐私与审核说明</Text>
           </Pressable>
+        </View>
+
+        <View style={[styles.footerCard, isWide && styles.panelWide]}>
+          <Text style={styles.footerTitle}>公开链接</Text>
+          <View style={styles.footerLinkRow}>
+            <Pressable style={styles.footerLink} onPress={() => openUrl(siteLinks.website)}>
+              <Text style={styles.footerLinkText}>主页</Text>
+            </Pressable>
+            <Pressable style={styles.footerLink} onPress={() => openUrl(siteLinks.support)}>
+              <Text style={styles.footerLinkText}>支持页</Text>
+            </Pressable>
+            <Pressable style={styles.footerLink} onPress={() => openUrl(siteLinks.privacy)}>
+              <Text style={styles.footerLinkText}>隐私政策</Text>
+            </Pressable>
+            <Pressable style={styles.footerLink} onPress={() => openUrl(siteLinks.github)}>
+              <Text style={styles.footerLinkText}>源码仓库</Text>
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
 
@@ -570,6 +690,25 @@ function BadgeText({ text }) {
   );
 }
 
+function FeatureCard({ title, text }) {
+  return (
+    <View style={styles.featureCard}>
+      <Text style={styles.featureTitle}>{title}</Text>
+      <Text style={styles.featureText}>{text}</Text>
+    </View>
+  );
+}
+
+function GuideCard({ step, title, text }) {
+  return (
+    <View style={styles.guideCard}>
+      <Text style={styles.guideStep}>{step}</Text>
+      <Text style={styles.guideTitle}>{title}</Text>
+      <Text style={styles.guideText}>{text}</Text>
+    </View>
+  );
+}
+
 function BlockCard({ title, items }) {
   return (
     <View style={styles.blockCard}>
@@ -605,6 +744,13 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     gap: 14,
   },
+  scrollContentWide: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 1240,
+    paddingHorizontal: 24,
+    paddingBottom: 48,
+  },
   hero: {
     backgroundColor: colors.paper,
     borderRadius: 26,
@@ -613,14 +759,28 @@ const styles = StyleSheet.create({
     padding: 18,
     gap: 14,
   },
+  heroWide: {
+    padding: 24,
+    gap: 18,
+  },
   heroTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
   },
+  heroTopRowWide: {
+    gap: 24,
+  },
   heroCopy: {
     flex: 1,
     gap: 10,
+  },
+  heroAside: {
+    gap: 10,
+    alignItems: 'flex-end',
+  },
+  heroAsideWide: {
+    minWidth: 184,
   },
   eyebrow: {
     color: colors.gold,
@@ -639,6 +799,36 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 24,
   },
+  heroActionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 2,
+  },
+  primaryHeroButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: colors.gold,
+  },
+  primaryHeroButtonText: {
+    color: '#fffdf8',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  ghostHeroButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: '#fff8ee',
+  },
+  ghostHeroButtonText: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   seal: {
     width: 72,
     height: 72,
@@ -655,6 +845,25 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
   },
+  heroStatCard: {
+    minWidth: 112,
+    borderRadius: 18,
+    backgroundColor: colors.paperDeep,
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  heroStatValue: {
+    color: colors.ink,
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  heroStatLabel: {
+    color: colors.inkSoft,
+    fontSize: 13,
+  },
   heroChipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -667,6 +876,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
     gap: 8,
+  },
+  noticeCardWide: {
+    padding: 16,
   },
   noticeTitle: {
     color: colors.ink,
@@ -681,6 +893,31 @@ const styles = StyleSheet.create({
   sectionHeader: {
     gap: 4,
     marginTop: 6,
+  },
+  overviewGrid: {
+    gap: 12,
+  },
+  overviewGridWide: {
+    flexDirection: 'row',
+  },
+  featureCard: {
+    flex: 1,
+    borderRadius: 22,
+    backgroundColor: '#f8f1e2',
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 18,
+    gap: 8,
+  },
+  featureTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  featureText: {
+    color: colors.inkSoft,
+    fontSize: 14,
+    lineHeight: 22,
   },
   sectionEyebrow: {
     color: colors.gold,
@@ -697,6 +934,11 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingRight: 8,
   },
+  masterGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 14,
+  },
   masterCard: {
     width: 240,
     backgroundColor: colors.paper,
@@ -705,6 +947,11 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: 16,
     gap: 10,
+  },
+  masterCardGrid: {
+    width: '31.5%',
+    minWidth: 260,
+    flexGrow: 1,
   },
   masterCardActive: {
     borderColor: colors.gold,
@@ -736,6 +983,9 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: 16,
     gap: 14,
+  },
+  panelWide: {
+    padding: 22,
   },
   panelHeader: {
     flexDirection: 'row',
@@ -772,6 +1022,39 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   noteText: {
+    color: colors.inkSoft,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  guideGrid: {
+    gap: 12,
+  },
+  guideGridWide: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  guideCard: {
+    flex: 1,
+    minWidth: 220,
+    borderRadius: 22,
+    backgroundColor: '#fffaf1',
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 16,
+    gap: 8,
+  },
+  guideStep: {
+    color: colors.gold,
+    fontSize: 12,
+    letterSpacing: 1.6,
+    fontWeight: '700',
+  },
+  guideTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  guideText: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 22,
@@ -984,6 +1267,37 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: 14,
     gap: 8,
+  },
+  footerCard: {
+    borderRadius: 24,
+    backgroundColor: colors.paper,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 18,
+    gap: 12,
+  },
+  footerTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  footerLinkRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  footerLink: {
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: '#fffaf1',
+  },
+  footerLinkText: {
+    color: colors.jade,
+    fontSize: 14,
+    fontWeight: '700',
   },
   blockTitle: {
     color: colors.gold,

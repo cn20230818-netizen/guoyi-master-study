@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  ImageBackground,
   Linking,
   Pressable,
   SafeAreaView,
@@ -13,11 +14,24 @@ import {
 import { masters, moduleMeta, commonRedflags, orderedMasterIds } from './src/data/catalog';
 import { computeResult, createAnswers, getAvailableModules, toggleMultiValue, validateStep } from './src/lib/engine';
 
+const fontStacks = {
+  serif: 'Noto Serif SC, Songti SC, STSong, serif',
+  sans: 'PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans SC, sans-serif',
+};
+
 const siteLinks = {
   website: 'https://www.guoyinaobing.cn',
   privacy: 'https://www.guoyinaobing.cn/privacy-policy.html',
   support: 'https://www.guoyinaobing.cn/support.html',
   github: 'https://github.com/cn20230818-netizen/guoyi-master-study',
+};
+
+const artSources = {
+  hero: 'https://images.metmuseum.org/CRDImages/as/web-large/DP201351_CRD.jpg',
+  zhang: 'https://images.metmuseum.org/CRDImages/as/web-large/DP205858_CRD.jpg',
+  liu: 'https://images.metmuseum.org/CRDImages/as/web-large/DP154058.jpg',
+  tu: 'https://images.metmuseum.org/CRDImages/as/web-large/DP213279_CRD.jpg',
+  method: 'https://images.metmuseum.org/CRDImages/as/web-large/176168_rev.jpg',
 };
 
 const copyrightNotice =
@@ -120,18 +134,24 @@ const masterVisuals = {
     accent: '#b65543',
     mood: '朱砂印色',
     line: '脑络金线',
+    artTitle: '山川脑络意象',
+    image: artSources.zhang,
     summary: '把脑病从附属脏腑论提升为独立病机中心，以脑络、水瘀、痰瘀统摄中风、痫证、眩晕与痴呆。',
   },
   liu: {
     accent: '#6c8794',
     mood: '黛青格序',
     line: '体系学派',
+    artTitle: '章法格页意象',
+    image: artSources.liu,
     summary: '擅长把恢复期、后遗期和虚实夹杂证分层拆解，将证素、治法和高频用药规律系统化。',
   },
   tu: {
     accent: '#8c7d5f',
     mood: '玄青机变',
     line: '云气流转',
+    artTitle: '云山流势意象',
+    image: artSources.tu,
     summary: '将急症思维与脑病慢病化裁贯通，尤其见长于眩晕、痴呆、失眠等脑病与神志病过渡区域。',
   },
 };
@@ -285,6 +305,7 @@ function App() {
 
   const isWide = width >= 1040;
   const isTablet = width >= 720;
+  const isMobile = width < 720;
   const studyMaster = masters[studyMasterId];
   const selectedModule = answers.module ? moduleMeta[answers.module] : null;
   const currentStep = studySteps[stepIndex];
@@ -577,9 +598,19 @@ function App() {
     const best = result.best;
     const alternative = result.alternative;
     const copy = buildResultCopy(studyMaster, best, selectedModule, answers);
+    const visual = masterVisuals[studyMasterId];
 
     return (
       <View style={styles.resultStack}>
+        <View style={styles.resultArtworkStack}>
+          <View style={styles.resultArtworkFrame}>
+            <ImageBackground source={{ uri: visual.image }} style={styles.resultArtwork} imageStyle={styles.resultArtworkImage}>
+              <View style={[styles.resultArtworkTint, { backgroundColor: `${visual.accent}1e` }]} />
+            </ImageBackground>
+          </View>
+          <Text style={styles.resultArtworkTitle}>{studyMaster.name} · {visual.artTitle}</Text>
+        </View>
+
         <View style={styles.primaryPanel}>
           <Text style={styles.panelEyebrow}>结论</Text>
           <Text style={styles.primaryPanelTitle}>{copy.heading}</Text>
@@ -647,17 +678,19 @@ function App() {
         <HomePage
           isWide={isWide}
           isTablet={isTablet}
+          isMobile={isMobile}
           navigate={navigate}
         />
       )
       : path === '/masters'
-        ? <MastersPage isWide={isWide} navigate={navigate} />
+        ? <MastersPage isWide={isWide} isMobile={isMobile} navigate={navigate} />
         : detailMasterId
           ? (
             <MasterDetailPage
               masterId={detailMasterId}
               isWide={isWide}
               isTablet={isTablet}
+              isMobile={isMobile}
               navigateToStudyWithMaster={navigateToStudyWithMaster}
               renderEvidenceCards={renderEvidenceCards}
             />
@@ -667,6 +700,7 @@ function App() {
               <StudyPage
                 isWide={isWide}
                 isTablet={isTablet}
+                isMobile={isMobile}
                 studyMasterId={studyMasterId}
                 switchStudyMaster={switchStudyMaster}
                 currentStep={currentStep}
@@ -680,14 +714,14 @@ function App() {
               />
             )
             : path === '/method'
-              ? <MethodPage isWide={isWide} navigate={navigate} />
+              ? <MethodPage isWide={isWide} isMobile={isMobile} navigate={navigate} />
               : <NotFoundPage navigate={navigate} />;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
       <View style={styles.appShell}>
-        <SiteHeader currentPath={path} navigate={navigate} openExternal={openExternal} />
+        <SiteHeader currentPath={path} navigate={navigate} openExternal={openExternal} isMobile={isMobile} />
         <ScrollView contentContainerStyle={[styles.pageScroll, isWide && styles.pageScrollWide]} showsVerticalScrollIndicator={false}>
           <View style={styles.backdropLayer}>
             <View style={styles.mountainOne} />
@@ -704,9 +738,9 @@ function App() {
   );
 }
 
-function SiteHeader({ currentPath, navigate, openExternal }) {
+function SiteHeader({ currentPath, navigate, openExternal, isMobile }) {
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, isMobile && styles.headerMobile]}>
       <Pressable style={styles.brandMark} onPress={() => navigate('/')}>
         <View style={styles.brandSeal}>
           <Text style={styles.brandSealText}>馆</Text>
@@ -717,13 +751,13 @@ function SiteHeader({ currentPath, navigate, openExternal }) {
         </View>
       </Pressable>
 
-      <View style={styles.navRow}>
+      <View style={[styles.navRow, isMobile && styles.navRowMobile]}>
         {navItems.map((item) => {
           const active = item.path ? (item.path === '/' ? currentPath === '/' : currentPath.startsWith(item.path)) : false;
           return (
             <Pressable
               key={item.path || item.external}
-              style={[styles.navLink, active && styles.navLinkActive]}
+              style={[styles.navLink, active && styles.navLinkActive, isMobile && styles.navLinkMobile]}
               onPress={() => (item.external ? openExternal(item.external) : navigate(item.path))}
             >
               <Text style={[styles.navLinkText, active && styles.navLinkTextActive]}>{item.label}</Text>
@@ -735,10 +769,18 @@ function SiteHeader({ currentPath, navigate, openExternal }) {
   );
 }
 
-function HomePage({ isWide, isTablet, navigate }) {
+function HomePage({ isWide, isTablet, isMobile, navigate }) {
   return (
     <View style={styles.pageStack}>
       <View style={[styles.heroPanel, isWide && styles.heroPanelWide]}>
+        <View style={styles.heroArtworkFrame}>
+          <ImageBackground source={{ uri: artSources.hero }} style={styles.heroArtwork} imageStyle={styles.heroArtworkImage}>
+            <View style={styles.heroArtworkTint} />
+            <View style={styles.heroArtworkGoldLine} />
+            <View style={styles.heroArtworkCloud} />
+          </ImageBackground>
+        </View>
+
         <View style={[styles.heroGrid, isWide && styles.heroGridWide]}>
           <View style={styles.heroMain}>
             <Text style={styles.eyebrow}>卷首第一屏</Text>
@@ -754,12 +796,21 @@ function HomePage({ isWide, isTablet, navigate }) {
             </View>
           </View>
 
-          <View style={styles.infoPlaque}>
-            <Text style={styles.plaqueEyebrow}>展签</Text>
-            <Text style={styles.plaqueTitle}>三位国医大师</Text>
-            <Text style={styles.plaqueLine}>六大脑病入口</Text>
-            <Text style={styles.plaqueLine}>公开资料映射</Text>
-            <Text style={styles.plaqueLine}>学术演练，不代临床</Text>
+          <View style={[styles.infoPlaque, isMobile && styles.infoPlaqueMobile]}>
+            <View style={styles.plaqueScroll}>
+              <Text style={styles.plaqueEyebrow}>卷中展签</Text>
+              <Text style={styles.plaqueTitle}>三位国医大师</Text>
+              <Text style={styles.plaqueLine}>六大脑病入口</Text>
+              <Text style={styles.plaqueLine}>公开资料映射</Text>
+              <Text style={styles.plaqueLine}>学术演练，不代临床</Text>
+            </View>
+            <View style={styles.plaqueArtworkFrame}>
+              <ImageBackground source={{ uri: artSources.method }} style={styles.plaqueArtwork} imageStyle={styles.plaqueArtworkImage}>
+                <View style={styles.plaqueArtworkTint} />
+                <View style={styles.plaqueArtworkTrace} />
+                <View style={styles.plaqueArtworkTraceShort} />
+              </ImageBackground>
+            </View>
           </View>
         </View>
         <View style={styles.heroMottoRow}>
@@ -778,6 +829,7 @@ function HomePage({ isWide, isTablet, navigate }) {
             key={masterId}
             master={masters[masterId]}
             visual={masterVisuals[masterId]}
+            isMobile={isMobile}
             onDetail={() => navigate(`/masters/${masterId}`)}
           />
         ))}
@@ -822,7 +874,7 @@ function HomePage({ isWide, isTablet, navigate }) {
   );
 }
 
-function MastersPage({ isWide, navigate }) {
+function MastersPage({ isWide, isMobile, navigate }) {
   return (
     <View style={styles.pageStack}>
       <PageIntro
@@ -837,6 +889,7 @@ function MastersPage({ isWide, navigate }) {
             key={masterId}
             master={masters[masterId]}
             visual={masterVisuals[masterId]}
+            isMobile={isMobile}
             onDetail={() => navigate(`/masters/${masterId}`)}
           />
         ))}
@@ -845,25 +898,37 @@ function MastersPage({ isWide, navigate }) {
   );
 }
 
-function MasterDetailPage({ masterId, isWide, isTablet, navigateToStudyWithMaster, renderEvidenceCards }) {
+function MasterDetailPage({ masterId, isWide, isTablet, isMobile, navigateToStudyWithMaster, renderEvidenceCards }) {
   const master = masters[masterId];
   const visual = masterVisuals[masterId];
 
   return (
     <View style={styles.pageStack}>
-      <View style={[styles.heroPanel, styles.masterHero]}>
-        <Text style={styles.heroTitle}>{master.name}</Text>
-        <Text style={styles.masterSubTitle}>{master.title}</Text>
-        <Text style={[styles.heroLead, styles.masterHeroLead]}>{master.doctrine}</Text>
-        {master.detailIntro.map((paragraph) => (
-          <Text key={paragraph} style={styles.heroCaption}>{paragraph}</Text>
-        ))}
-        <View style={styles.tagRow}>
-          <Tag text={visual.mood} accent={visual.accent} />
-          <Tag text={visual.line} accent={visual.accent} />
+      <View style={[styles.masterHeroShell, isWide && styles.masterHeroShellWide]}>
+        <View style={[styles.heroPanel, styles.masterHeroCopyPanel]}>
+          <Text style={styles.heroTitle}>{master.name}</Text>
+          <Text style={styles.masterSubTitle}>{master.title}</Text>
+          <Text style={[styles.heroLead, styles.masterHeroLead]}>{master.doctrine}</Text>
+          {master.detailIntro.map((paragraph) => (
+            <Text key={paragraph} style={styles.heroCaption}>{paragraph}</Text>
+          ))}
+          <View style={styles.tagRow}>
+            <Tag text={visual.mood} accent={visual.accent} />
+            <Tag text={visual.line} accent={visual.accent} />
+          </View>
+          <View style={styles.heroButtonRow}>
+            <PrimaryButton text="进入研习" onPress={() => navigateToStudyWithMaster(masterId)} />
+          </View>
         </View>
-        <View style={styles.heroButtonRow}>
-          <PrimaryButton text="进入研习" onPress={() => navigateToStudyWithMaster(masterId)} />
+
+        <View style={[styles.secondaryPanel, styles.masterHeroArtPanel, isMobile && styles.masterHeroArtPanelMobile]}>
+          <View style={styles.masterHeroArtworkFrame}>
+            <ImageBackground source={{ uri: visual.image }} style={styles.masterHeroArtwork} imageStyle={styles.masterHeroArtworkImage}>
+              <View style={[styles.masterHeroArtworkTint, { backgroundColor: `${visual.accent}24` }]} />
+            </ImageBackground>
+          </View>
+          <Text style={styles.masterHeroArtworkTitle}>{visual.artTitle}</Text>
+          <Text style={styles.secondaryPanelText}>{visual.mood} · {visual.line}</Text>
         </View>
       </View>
 
@@ -914,6 +979,7 @@ function MasterDetailPage({ masterId, isWide, isTablet, navigateToStudyWithMaste
 
 function StudyPage({
   isWide,
+  isMobile,
   studyMasterId,
   switchStudyMaster,
   currentStep,
@@ -960,9 +1026,16 @@ function StudyPage({
       <View style={[styles.scrollColumns, isWide && styles.scrollColumnsWide]}>
         <View style={styles.columnMain}>
           <View style={styles.primaryPanel}>
-            <Text style={styles.panelEyebrow}>研习次第</Text>
-            <Text style={styles.primaryPanelTitle}>{currentStep.title}</Text>
-            <Text style={styles.primaryPanelText}>{currentStep.subtitle}</Text>
+            <View style={[styles.stepHeaderRow, isMobile && styles.stepHeaderRowMobile]}>
+              <View style={styles.stepSeal}>
+                <Text style={styles.stepSealText}>{`0${stepIndex + 1}`.slice(-2)}</Text>
+              </View>
+              <View style={styles.stepHeaderCopy}>
+                <Text style={styles.panelEyebrow}>研习次第</Text>
+                <Text style={styles.primaryPanelTitle}>{currentStep.title}</Text>
+                <Text style={styles.primaryPanelText}>{currentStep.subtitle}</Text>
+              </View>
+            </View>
 
             <View style={styles.progressRow}>
               <Text style={styles.progressText}>{stepIndex + 1} / {studySteps.length}</Text>
@@ -971,11 +1044,15 @@ function StudyPage({
               </View>
             </View>
 
-            <View style={styles.stepRail}>
+            <View style={[styles.stepRail, isMobile && styles.stepRailMobile]}>
               {studySteps.map((step, index) => {
                 const active = index === stepIndex;
+                const complete = index < stepIndex;
                 return (
-                  <View key={step.key} style={[styles.stepChip, active && styles.stepChipActive]}>
+                  <View key={step.key} style={[styles.stepChip, active && styles.stepChipActive, complete && styles.stepChipComplete]}>
+                    <Text style={[styles.stepChipNumber, (active || complete) && styles.stepChipNumberActive]}>
+                      {`0${index + 1}`.slice(-2)}
+                    </Text>
                     <Text style={[styles.stepChipText, active && styles.stepChipTextActive]}>{step.nav}</Text>
                   </View>
                 );
@@ -1004,7 +1081,7 @@ function StudyPage({
   );
 }
 
-function MethodPage({ isWide }) {
+function MethodPage({ isWide, isMobile }) {
   return (
     <View style={styles.pageStack}>
       <PageIntro
@@ -1013,12 +1090,27 @@ function MethodPage({ isWide }) {
         description="本站依据公开可核验资料，对三位国医大师脑病相关学术内容进行整理。"
       />
 
-      <View style={styles.secondaryPanel}>
-        <Text style={styles.secondaryPanelText}>所用资料主要包括官方机构页、官方转载医案、期刊官网摘要页、文献题录与目录线索。</Text>
-        <Text style={styles.secondaryPanelText}>本站不诚称已完整通读中国知网中所有出现相关姓名的全文论文。原因在于全文访问受数据库权限与版权限制。因此，本站的学术结论属于“公开资料基础上的高频主轴提炼”，而非“封闭数据库全文穷尽式综述”。</Text>
-        <Text style={styles.secondaryPanelText}>本站整理时遵循三项原则：其一，只提炼反复出现的病机主轴；其二，不以孤例代替通则；其三，公开原案只作学习展示，不直接转化为现实个体处方。</Text>
-        <Text style={styles.secondaryPanelText}>本站定位为：学术传承、教学演练、研究浏览。</Text>
-        <Text style={styles.secondaryPanelText}>本站不替代线下问诊、急诊评估及执业医师处方决策。若出现急性偏瘫、意识障碍、持续抽搐、爆炸样头痛等情况，应立即就医。</Text>
+      <View style={[styles.methodHeroPanel, isWide && styles.methodHeroPanelWide]}>
+        <View style={styles.secondaryPanel}>
+          <Text style={styles.secondaryPanelText}>所用资料主要包括官方机构页、官方转载医案、期刊官网摘要页、文献题录与目录线索。</Text>
+          <Text style={styles.secondaryPanelText}>本站不诚称已完整通读中国知网中所有出现相关姓名的全文论文。原因在于全文访问受数据库权限与版权限制。因此，本站的学术结论属于“公开资料基础上的高频主轴提炼”，而非“封闭数据库全文穷尽式综述”。</Text>
+          <Text style={styles.secondaryPanelText}>本站整理时遵循三项原则：其一，只提炼反复出现的病机主轴；其二，不以孤例代替通则；其三，公开原案只作学习展示，不直接转化为现实个体处方。</Text>
+          <Text style={styles.secondaryPanelText}>本站定位为：学术传承、教学演练、研究浏览。</Text>
+          <Text style={styles.secondaryPanelText}>本站不替代线下问诊、急诊评估及执业医师处方决策。若出现急性偏瘫、意识障碍、持续抽搐、爆炸样头痛等情况，应立即就医。</Text>
+        </View>
+
+        <View style={[styles.methodArtColumn, isMobile && styles.methodArtColumnMobile]}>
+          <View style={styles.methodArtFrameLarge}>
+            <ImageBackground source={{ uri: artSources.method }} style={styles.methodArtImage} imageStyle={styles.methodArtImageStyle}>
+              <View style={styles.methodArtTint} />
+            </ImageBackground>
+          </View>
+          <View style={styles.methodArtFrameSmall}>
+            <ImageBackground source={{ uri: artSources.liu }} style={styles.methodArtImage} imageStyle={styles.methodArtImageStyle}>
+              <View style={styles.methodArtTint} />
+            </ImageBackground>
+          </View>
+        </View>
       </View>
 
       <View style={[styles.methodPreviewGrid, isWide && styles.methodPreviewGridWide]}>
@@ -1137,9 +1229,14 @@ function MethodCard({ title, items }) {
   );
 }
 
-function MasterPreviewCard({ master, visual, onDetail }) {
+function MasterPreviewCard({ master, visual, isMobile, onDetail }) {
   return (
     <View style={styles.masterPreviewCard}>
+      <View style={styles.masterPreviewArtworkFrame}>
+        <ImageBackground source={{ uri: visual.image }} style={styles.masterPreviewArtwork} imageStyle={styles.masterPreviewArtworkImage}>
+          <View style={[styles.masterPreviewArtworkTint, { backgroundColor: `${visual.accent}24` }]} />
+        </ImageBackground>
+      </View>
       <View style={[styles.masterAccentBar, { backgroundColor: visual.accent }]} />
       <Text style={styles.masterPreviewName}>{master.name}</Text>
       <Text style={styles.masterPreviewLabel}>{master.title}</Text>
@@ -1190,6 +1287,13 @@ function ChipGrid({ options, values, onPress }) {
 function SiteFooter({ navigate, openExternal }) {
   return (
     <View style={styles.footer}>
+      <View style={styles.footerCrest}>
+        <View style={styles.footerCrestLine} />
+        <View style={styles.footerPeakLeft} />
+        <View style={styles.footerPeakCenter} />
+        <View style={styles.footerPeakRight} />
+      </View>
+      <Text style={styles.footerClosing}>不是替你开方，而是带你看见国医大师如何立法。</Text>
       <Text style={styles.footerTitle}>站点入口</Text>
       <View style={styles.footerLinks}>
         <Pressable onPress={() => navigate('/')}><Text style={styles.footerLink}>首页</Text></Pressable>
@@ -1233,11 +1337,16 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 14,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.line,
     backgroundColor: '#120d0a',
-    gap: 14,
+    gap: 12,
+  },
+  headerMobile: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   brandMark: {
     flexDirection: 'row',
@@ -1247,7 +1356,7 @@ const styles = StyleSheet.create({
   brandSeal: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: 10,
     backgroundColor: '#2f1712',
     borderWidth: 1,
     borderColor: '#7a4331',
@@ -1266,35 +1375,44 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 18,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   brandSubTitle: {
     color: colors.inkSoft,
     fontSize: 12,
+    fontFamily: fontStacks.sans,
   },
   navRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 16,
+    alignItems: 'center',
+  },
+  navRowMobile: {
+    gap: 12,
   },
   navLink: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.bgRaised,
+    paddingHorizontal: 0,
+    paddingVertical: 8,
+    borderRadius: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: 'transparent',
+    backgroundColor: 'transparent',
   },
   navLinkActive: {
-    backgroundColor: colors.cardLight,
-    borderColor: colors.gold,
+    borderBottomColor: colors.gold,
+  },
+  navLinkMobile: {
+    paddingVertical: 6,
   },
   navLinkText: {
     color: colors.inkSoft,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
+    fontFamily: fontStacks.sans,
   },
   navLinkTextActive: {
-    color: colors.ink,
+    color: colors.gold,
   },
   pageScroll: {
     padding: 20,
@@ -1376,16 +1494,56 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 28,
-    gap: 22,
-    borderRadius: 28,
+    padding: 24,
+    gap: 18,
+    borderRadius: 20,
     shadowColor: '#000',
     shadowOpacity: 0.32,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: 14 },
+    overflow: 'hidden',
   },
   heroPanelWide: {
-    padding: 34,
+    padding: 30,
+  },
+  heroArtworkFrame: {
+    height: 188,
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3b2c20',
+    backgroundColor: '#0c0907',
+  },
+  heroArtwork: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  heroArtworkImage: {
+    opacity: 0.2,
+  },
+  heroArtworkTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(10, 8, 6, 0.46)',
+  },
+  heroArtworkGoldLine: {
+    position: 'absolute',
+    right: 42,
+    top: 24,
+    width: 220,
+    height: 1,
+    backgroundColor: 'rgba(201, 150, 82, 0.7)',
+    transform: [{ rotate: '-8deg' }],
+  },
+  heroArtworkCloud: {
+    position: 'absolute',
+    right: 28,
+    bottom: 30,
+    width: 150,
+    height: 40,
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 150, 82, 0.35)',
+    backgroundColor: 'rgba(15, 11, 9, 0.16)',
   },
   heroGrid: {
     gap: 20,
@@ -1400,53 +1558,101 @@ const styles = StyleSheet.create({
   },
   infoPlaque: {
     flex: 0.8,
-    backgroundColor: colors.cardSoft,
+    gap: 12,
+    minHeight: 240,
+  },
+  infoPlaqueMobile: {
+    minHeight: undefined,
+  },
+  plaqueScroll: {
+    backgroundColor: colors.bgRaised,
     borderWidth: 1,
     borderColor: colors.goldSoft,
-    padding: 22,
-    borderRadius: 18,
-    justifyContent: 'center',
+    padding: 18,
+    borderRadius: 16,
     gap: 8,
-    minHeight: 220,
+  },
+  plaqueArtworkFrame: {
+    height: 128,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: '#100c09',
+  },
+  plaqueArtwork: {
+    flex: 1,
+  },
+  plaqueArtworkImage: {
+    opacity: 0.22,
+  },
+  plaqueArtworkTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(13, 10, 8, 0.42)',
+  },
+  plaqueArtworkTrace: {
+    position: 'absolute',
+    left: 24,
+    top: 40,
+    width: 170,
+    height: 1,
+    backgroundColor: 'rgba(201, 150, 82, 0.62)',
+    transform: [{ rotate: '12deg' }],
+  },
+  plaqueArtworkTraceShort: {
+    position: 'absolute',
+    left: 64,
+    top: 78,
+    width: 96,
+    height: 1,
+    backgroundColor: 'rgba(201, 150, 82, 0.42)',
+    transform: [{ rotate: '-8deg' }],
   },
   plaqueEyebrow: {
     color: colors.gold,
     fontSize: 12,
     letterSpacing: 2,
     textTransform: 'uppercase',
+    fontFamily: fontStacks.sans,
   },
   plaqueTitle: {
     color: colors.ink,
     fontSize: 28,
     fontWeight: '700',
     marginBottom: 8,
+    fontFamily: fontStacks.serif,
   },
   plaqueLine: {
     color: colors.inkSoft,
     fontSize: 16,
     lineHeight: 24,
+    fontFamily: fontStacks.sans,
   },
   eyebrow: {
     color: colors.gold,
     fontSize: 12,
     letterSpacing: 2,
     textTransform: 'uppercase',
+    fontFamily: fontStacks.sans,
   },
   heroTitle: {
     color: colors.ink,
     fontSize: 42,
     lineHeight: 50,
     fontWeight: '800',
+    fontFamily: fontStacks.serif,
   },
   heroLead: {
     color: colors.inkSoft,
     fontSize: 17,
     lineHeight: 29,
+    fontFamily: fontStacks.serif,
   },
   heroCaption: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 24,
+    fontFamily: fontStacks.sans,
   },
   heroButtonRow: {
     flexDirection: 'row',
@@ -1467,6 +1673,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 1.2,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   primaryButton: {
     paddingHorizontal: 18,
@@ -1478,14 +1685,15 @@ const styles = StyleSheet.create({
     color: '#1a130d',
     fontSize: 15,
     fontWeight: '800',
+    fontFamily: fontStacks.sans,
   },
   secondaryButton: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: colors.cardSoft,
+    backgroundColor: 'transparent',
   },
   secondaryButtonDisabled: {
     opacity: 0.45,
@@ -1494,6 +1702,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 14,
     fontWeight: '700',
+    fontFamily: fontStacks.sans,
   },
   secondaryButtonTextDisabled: {
     color: colors.inkSoft,
@@ -1506,17 +1715,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.8,
     textTransform: 'uppercase',
+    fontFamily: fontStacks.sans,
   },
   sectionTitle: {
     color: colors.ink,
     fontSize: 30,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   sectionLead: {
     color: colors.inkSoft,
     fontSize: 15,
     lineHeight: 25,
     maxWidth: 980,
+    fontFamily: fontStacks.sans,
   },
   tripleGrid: {
     gap: 16,
@@ -1529,7 +1741,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgRaised,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 20,
     gap: 10,
   },
@@ -1537,45 +1749,68 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 20,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   featureText: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 24,
+    fontFamily: fontStacks.sans,
   },
   masterPreviewCard: {
     flex: 1,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 24,
-    padding: 22,
+    borderRadius: 18,
+    padding: 18,
     gap: 12,
+  },
+  masterPreviewArtworkFrame: {
+    height: 148,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3c2b1f',
+    backgroundColor: '#0f0b08',
+  },
+  masterPreviewArtwork: {
+    flex: 1,
+  },
+  masterPreviewArtworkImage: {
+    opacity: 0.32,
+  },
+  masterPreviewArtworkTint: {
+    ...StyleSheet.absoluteFillObject,
   },
   masterAccentBar: {
     width: 72,
     height: 3,
-    borderRadius: 999,
+    borderRadius: 8,
   },
   masterPreviewName: {
     color: colors.ink,
     fontSize: 28,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   masterPreviewLabel: {
     color: colors.inkSoft,
     fontSize: 13,
+    fontFamily: fontStacks.sans,
   },
   masterPreviewCore: {
     color: colors.gold,
     fontSize: 15,
     fontWeight: '700',
     lineHeight: 24,
+    fontFamily: fontStacks.serif,
   },
   masterPreviewText: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 24,
+    fontFamily: fontStacks.sans,
   },
   masterPreviewTagRow: {
     flexDirection: 'row',
@@ -1590,7 +1825,7 @@ const styles = StyleSheet.create({
   tag: {
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 999,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: colors.cardSoft,
@@ -1599,6 +1834,7 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
     fontSize: 13,
     fontWeight: '700',
+    fontFamily: fontStacks.sans,
   },
   buttonColumn: {
     gap: 10,
@@ -1617,7 +1853,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgRaised,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 18,
     gap: 8,
   },
@@ -1625,11 +1861,13 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 18,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   methodCardItem: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 23,
+    fontFamily: fontStacks.sans,
   },
   centerRow: {
     alignItems: 'flex-start',
@@ -1641,23 +1879,66 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 38,
     fontWeight: '800',
+    fontFamily: fontStacks.serif,
   },
   pageDescription: {
     color: colors.inkSoft,
     fontSize: 15,
     lineHeight: 25,
     maxWidth: 940,
+    fontFamily: fontStacks.sans,
   },
   masterHero: {
     gap: 14,
+  },
+  masterHeroShell: {
+    gap: 16,
+  },
+  masterHeroShellWide: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  masterHeroCopyPanel: {
+    flex: 1.15,
   },
   masterSubTitle: {
     color: colors.inkSoft,
     fontSize: 16,
     lineHeight: 24,
+    fontFamily: fontStacks.sans,
   },
   masterHeroLead: {
     color: colors.gold,
+  },
+  masterHeroArtPanel: {
+    flex: 0.85,
+    justifyContent: 'flex-start',
+  },
+  masterHeroArtPanelMobile: {
+    flex: undefined,
+  },
+  masterHeroArtworkFrame: {
+    height: 240,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3c2d22',
+    backgroundColor: '#0f0b08',
+  },
+  masterHeroArtwork: {
+    flex: 1,
+  },
+  masterHeroArtworkImage: {
+    opacity: 0.34,
+  },
+  masterHeroArtworkTint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  masterHeroArtworkTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   scrollColumns: {
     gap: 18,
@@ -1678,7 +1959,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgRaised,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 22,
+    borderRadius: 16,
     padding: 20,
     gap: 14,
   },
@@ -1686,7 +1967,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.goldSoft,
-    borderRadius: 24,
+    borderRadius: 18,
     padding: 22,
     gap: 16,
   },
@@ -1701,26 +1982,31 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 38,
+    fontFamily: fontStacks.serif,
   },
   primaryPanelText: {
     color: colors.inkSoft,
     fontSize: 15,
     lineHeight: 25,
+    fontFamily: fontStacks.sans,
   },
   primaryPanelBullet: {
     color: colors.inkSoft,
     fontSize: 15,
     lineHeight: 25,
+    fontFamily: fontStacks.sans,
   },
   secondaryPanelTitle: {
     color: colors.ink,
     fontSize: 24,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   secondaryPanelText: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 24,
+    fontFamily: fontStacks.sans,
   },
   dualGrid: {
     gap: 14,
@@ -1735,7 +2021,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 18,
     gap: 8,
   },
@@ -1744,16 +2030,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.8,
     fontWeight: '700',
+    fontFamily: fontStacks.sans,
   },
   guideTitle: {
     color: colors.ink,
     fontSize: 18,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   guideText: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 23,
+    fontFamily: fontStacks.sans,
   },
   pathwayListItem: {
     gap: 6,
@@ -1766,11 +2055,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 24,
+    fontFamily: fontStacks.serif,
   },
   pathwayText: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: fontStacks.sans,
   },
   evidenceGrid: {
     gap: 12,
@@ -1785,7 +2076,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 18,
+    borderRadius: 14,
     padding: 16,
     gap: 8,
   },
@@ -1798,27 +2089,32 @@ const styles = StyleSheet.create({
     color: colors.gold,
     fontSize: 12,
     fontWeight: '700',
+    fontFamily: fontStacks.sans,
   },
   evidenceUsageTag: {
     color: colors.jade,
     fontSize: 12,
     fontWeight: '700',
+    fontFamily: fontStacks.sans,
   },
   evidenceTitle: {
     color: colors.ink,
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 24,
+    fontFamily: fontStacks.serif,
   },
   evidenceNote: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: fontStacks.sans,
   },
   evidenceLink: {
     color: colors.jade,
     fontSize: 13,
     textDecorationLine: 'underline',
+    fontFamily: fontStacks.sans,
   },
   masterSwitchRow: {
     gap: 12,
@@ -1827,7 +2123,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 16,
     gap: 6,
   },
@@ -1839,6 +2135,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 18,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   masterSwitchNameActive: {
     color: colors.gold,
@@ -1847,6 +2144,36 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
     fontSize: 13,
     lineHeight: 21,
+    fontFamily: fontStacks.sans,
+  },
+  stepHeaderRow: {
+    flexDirection: 'row',
+    gap: 14,
+    alignItems: 'flex-start',
+  },
+  stepHeaderRowMobile: {
+    flexDirection: 'column',
+    gap: 10,
+  },
+  stepHeaderCopy: {
+    flex: 1,
+    gap: 6,
+  },
+  stepSeal: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#26150f',
+    borderWidth: 1,
+    borderColor: '#7a4331',
+  },
+  stepSealText: {
+    color: colors.red,
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   progressRow: {
     flexDirection: 'row',
@@ -1857,10 +2184,11 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
     fontSize: 13,
     width: 48,
+    fontFamily: fontStacks.sans,
   },
   progressTrack: {
     flex: 1,
-    height: 8,
+    height: 6,
     borderRadius: 999,
     backgroundColor: '#2b2016',
     overflow: 'hidden',
@@ -1874,9 +2202,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
   },
+  stepRailMobile: {
+    gap: 8,
+  },
   stepChip: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    minWidth: 112,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.line,
@@ -1886,10 +2221,24 @@ const styles = StyleSheet.create({
     borderColor: colors.gold,
     backgroundColor: '#322418',
   },
+  stepChipComplete: {
+    borderColor: colors.goldSoft,
+    backgroundColor: '#261c14',
+  },
+  stepChipNumber: {
+    color: colors.inkSoft,
+    fontSize: 11,
+    letterSpacing: 1,
+    fontFamily: fontStacks.serif,
+  },
+  stepChipNumberActive: {
+    color: colors.gold,
+  },
   stepChipText: {
     color: colors.inkSoft,
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: fontStacks.sans,
   },
   stepChipTextActive: {
     color: colors.ink,
@@ -1901,17 +2250,19 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 23,
+    fontFamily: fontStacks.sans,
   },
   inlineNote: {
     color: colors.inkSoft,
     fontSize: 13,
     lineHeight: 21,
+    fontFamily: fontStacks.sans,
   },
   optionCard: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 16,
     gap: 6,
   },
@@ -1923,11 +2274,13 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   optionMeta: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: fontStacks.sans,
   },
   dualColumnCard: {
     gap: 12,
@@ -1936,7 +2289,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 18,
+    borderRadius: 16,
     padding: 16,
     gap: 10,
   },
@@ -1944,6 +2297,7 @@ const styles = StyleSheet.create({
     color: colors.gold,
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   chipGrid: {
     flexDirection: 'row',
@@ -1952,8 +2306,8 @@ const styles = StyleSheet.create({
   },
   choiceChip: {
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 9,
+    borderRadius: 9,
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: '#1c1611',
@@ -1965,6 +2319,7 @@ const styles = StyleSheet.create({
   choiceChipText: {
     color: colors.inkSoft,
     fontSize: 14,
+    fontFamily: fontStacks.sans,
   },
   choiceChipTextSelected: {
     color: colors.ink,
@@ -1978,11 +2333,37 @@ const styles = StyleSheet.create({
   resultStack: {
     gap: 18,
   },
+  resultArtworkStack: {
+    gap: 8,
+  },
+  resultArtworkFrame: {
+    height: 156,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3d2d21',
+    backgroundColor: '#0f0b08',
+  },
+  resultArtwork: {
+    flex: 1,
+  },
+  resultArtworkImage: {
+    opacity: 0.32,
+  },
+  resultArtworkTint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  resultArtworkTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: fontStacks.serif,
+  },
   reasonCard: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 18,
+    borderRadius: 14,
     padding: 16,
     gap: 6,
   },
@@ -1990,17 +2371,19 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   reasonText: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: fontStacks.sans,
   },
   warningCard: {
     backgroundColor: '#2a1b13',
     borderWidth: 1,
     borderColor: colors.goldSoft,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 14,
     gap: 10,
   },
@@ -2008,6 +2391,7 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: fontStacks.sans,
   },
   formulaGrid: {
     gap: 10,
@@ -2022,7 +2406,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 14,
     gap: 4,
   },
@@ -2030,23 +2414,103 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 15,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   formulaDose: {
     color: colors.inkSoft,
     fontSize: 13,
     lineHeight: 20,
+    fontFamily: fontStacks.sans,
+  },
+  methodHeroPanel: {
+    gap: 16,
+  },
+  methodHeroPanelWide: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  methodArtColumn: {
+    flex: 0.9,
+    gap: 14,
+  },
+  methodArtColumnMobile: {
+    flex: undefined,
+  },
+  methodArtFrameLarge: {
+    height: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3c2d22',
+    backgroundColor: '#100c09',
+  },
+  methodArtFrameSmall: {
+    height: 140,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3c2d22',
+    backgroundColor: '#100c09',
+  },
+  methodArtImage: {
+    flex: 1,
+  },
+  methodArtImageStyle: {
+    opacity: 0.28,
+  },
+  methodArtTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(13, 10, 8, 0.34)',
   },
   footer: {
     marginTop: 16,
     paddingTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
     gap: 10,
+  },
+  footerCrest: {
+    height: 30,
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  footerCrestLine: {
+    height: 1,
+    backgroundColor: colors.goldSoft,
+  },
+  footerPeakLeft: {
+    position: 'absolute',
+    left: '18%',
+    width: 40,
+    height: 1,
+    backgroundColor: colors.gold,
+    transform: [{ rotate: '-18deg' }],
+  },
+  footerPeakCenter: {
+    position: 'absolute',
+    left: '45%',
+    width: 56,
+    height: 1,
+    backgroundColor: colors.gold,
+    transform: [{ rotate: '14deg' }],
+  },
+  footerPeakRight: {
+    position: 'absolute',
+    right: '16%',
+    width: 46,
+    height: 1,
+    backgroundColor: colors.gold,
+    transform: [{ rotate: '-10deg' }],
+  },
+  footerClosing: {
+    color: colors.ink,
+    fontSize: 16,
+    lineHeight: 24,
+    fontFamily: fontStacks.serif,
   },
   footerTitle: {
     color: colors.ink,
     fontSize: 18,
     fontWeight: '700',
+    fontFamily: fontStacks.serif,
   },
   footerLinks: {
     flexDirection: 'row',
@@ -2058,11 +2522,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 22,
     maxWidth: 980,
+    fontFamily: fontStacks.sans,
   },
   footerLink: {
     color: colors.jade,
     fontSize: 14,
     textDecorationLine: 'underline',
+    fontFamily: fontStacks.sans,
   },
 });
 

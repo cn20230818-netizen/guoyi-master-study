@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Image,
   ImageBackground,
   Linking,
   Pressable,
@@ -33,6 +34,27 @@ const artSources = {
   liu: 'https://images.metmuseum.org/CRDImages/as/web-large/DP154058.jpg',
   tu: 'https://images.metmuseum.org/CRDImages/as/web-large/DP213279_CRD.jpg',
   method: 'https://images.metmuseum.org/CRDImages/as/web-large/176168_rev.jpg',
+};
+
+function createSvgDataUri(svg) {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+const cloudSources = {
+  broad: createSvgDataUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="760" height="280" viewBox="0 0 760 280" fill="none">
+      <path d="M72 176c24-38 68-60 131-60 37 0 66 7 88 22 23-29 58-43 104-43 61 0 105 24 133 70 27-7 54-11 82-11 56 0 103 18 142 53-42-14-82-18-120-11-18 28-54 43-107 43-36 0-66-8-93-25-20 13-48 20-84 20-58 0-99-19-123-58-17 4-34 6-52 6-37 0-69-8-101-25z" fill="#c99652" fill-opacity=".045"/>
+      <path d="M154 182c16-16 34-24 54-24 20 0 35 6 46 17 14-10 31-15 52-15 26 0 47 8 62 24-20-5-38-5-54 1 7 4 12 10 15 18-17-3-33-8-47-15-8-4-18-5-30-5-8 0-16 1-24 3-11 12-28 18-50 18-18 0-32-3-43-10 11-4 17-8 19-12z" stroke="#a67a45" stroke-opacity=".28" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M470 150c20-19 43-28 69-28 22 0 41 5 55 17 16-12 38-18 66-18 36 0 65 11 89 33-28-7-53-7-76 1 13 6 23 15 29 27-29-5-53-13-73-24-10-5-24-8-41-8-12 0-24 2-35 5-15 16-38 24-68 24-23 0-41-5-57-16 17-6 28-11 32-13z" stroke="#c99652" stroke-opacity=".22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `),
+  spiral: createSvgDataUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="520" height="220" viewBox="0 0 520 220" fill="none">
+      <path d="M42 146c18-14 39-21 64-21 18 0 34 4 49 11 15-15 34-22 60-22 27 0 50 8 71 23 20-9 41-13 64-13 39 0 74 12 104 37-30-8-58-8-86 1 13 8 22 16 27 27-26-3-49-10-69-21-10-5-23-8-38-8-14 0-27 3-41 8-16 13-38 19-65 19-21 0-38-4-53-11 8-6 16-10 23-14-18-8-35-10-50-6 5-4 12-7 20-10z" fill="#c99652" fill-opacity=".04"/>
+      <path d="M96 150c13-15 30-22 53-22 18 0 32 5 44 14 11-9 28-13 49-13 23 0 43 7 60 21-18-3-34-1-49 4 10 4 17 11 20 19-18-2-34-7-48-14-7-4-17-6-29-6-10 0-19 2-29 5-13 11-29 16-49 16-16 0-29-4-39-11 8-4 14-8 17-13-16-4-28-4-36 0 5-4 10-7 16-10z" stroke="#b88849" stroke-opacity=".24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M294 84c18-8 38-8 60 0-14 3-22 8-25 14 10 1 21 5 33 11-19 2-35 0-48-6-5-2-11-4-18-4 6-7 5-12-2-15z" stroke="#c99652" stroke-opacity=".22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `),
 };
 
 const copyrightNotice =
@@ -791,8 +813,12 @@ function App() {
             <View style={styles.mountainOne} />
             <View style={styles.mountainTwo} />
             <View style={styles.mountainThree} />
-            <View style={styles.cloudRibbonOne} />
-            <View style={styles.cloudRibbonTwo} />
+            <Image source={{ uri: cloudSources.broad }} style={[styles.backdropCloud, styles.backdropCloudTopRight, isMobile && styles.backdropCloudTopRightMobile]} resizeMode="contain" />
+            <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.backdropCloudTopLeft, isMobile && styles.backdropCloudTopLeftMobile]} resizeMode="contain" />
+            <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.backdropCloudMiddle, isMobile && styles.backdropCloudMiddleMobile]} resizeMode="contain" />
+            <Image source={{ uri: cloudSources.broad }} style={[styles.backdropCloud, styles.backdropCloudBottom, isMobile && styles.backdropCloudBottomMobile]} resizeMode="contain" />
+            <View style={styles.cloudMistOne} />
+            <View style={styles.cloudMistTwo} />
           </View>
           {currentPage}
           <SiteFooter navigate={navigate} openExternal={openExternal} />
@@ -1573,6 +1599,8 @@ const styles = StyleSheet.create({
     color: colors.gold,
   },
   pageScroll: {
+    position: 'relative',
+    overflow: 'hidden',
     padding: 20,
     paddingBottom: 48,
     gap: 28,
@@ -1593,7 +1621,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 620,
+    bottom: 0,
     overflow: 'hidden',
     pointerEvents: 'none',
   },
@@ -1624,25 +1652,91 @@ const styles = StyleSheet.create({
     borderRadius: 280,
     backgroundColor: 'rgba(54, 40, 30, 0.28)',
   },
-  cloudRibbonOne: {
+  backdropCloud: {
     position: 'absolute',
-    top: 58,
-    right: 92,
-    width: 220,
-    height: 28,
-    borderRadius: 28,
-    backgroundColor: 'rgba(201, 150, 82, 0.06)',
-    transform: [{ rotate: '-10deg' }],
+    opacity: 0.82,
   },
-  cloudRibbonTwo: {
+  backdropCloudTopLeft: {
     position: 'absolute',
-    top: 92,
-    right: 34,
+    top: 84,
+    left: -30,
+    width: 280,
+    height: 118,
+    opacity: 0.5,
+    transform: [{ rotate: '-7deg' }],
+  },
+  backdropCloudTopLeftMobile: {
+    top: 96,
+    left: -48,
+    width: 210,
+    height: 88,
+    opacity: 0.38,
+  },
+  backdropCloudTopRight: {
+    position: 'absolute',
+    top: 36,
+    right: -34,
+    width: 430,
+    height: 158,
+    opacity: 0.54,
+    transform: [{ rotate: '-3deg' }],
+  },
+  backdropCloudTopRightMobile: {
+    top: 56,
+    right: -78,
+    width: 270,
+    height: 102,
+    opacity: 0.34,
+  },
+  backdropCloudMiddle: {
+    position: 'absolute',
+    top: 600,
+    right: 18,
+    width: 250,
+    height: 108,
+    opacity: 0.32,
+    transform: [{ rotate: '9deg' }],
+  },
+  backdropCloudMiddleMobile: {
+    top: 740,
+    right: -20,
     width: 180,
-    height: 24,
-    borderRadius: 24,
-    backgroundColor: 'rgba(201, 150, 82, 0.045)',
-    transform: [{ rotate: '8deg' }],
+    height: 78,
+    opacity: 0.2,
+  },
+  backdropCloudBottom: {
+    position: 'absolute',
+    bottom: 120,
+    left: -48,
+    width: 360,
+    height: 140,
+    opacity: 0.28,
+    transform: [{ rotate: '4deg' }],
+  },
+  backdropCloudBottomMobile: {
+    bottom: 200,
+    left: -70,
+    width: 240,
+    height: 94,
+    opacity: 0.18,
+  },
+  cloudMistOne: {
+    position: 'absolute',
+    top: 180,
+    right: -80,
+    width: 340,
+    height: 180,
+    borderRadius: 180,
+    backgroundColor: 'rgba(201, 150, 82, 0.03)',
+  },
+  cloudMistTwo: {
+    position: 'absolute',
+    bottom: 320,
+    left: -90,
+    width: 300,
+    height: 150,
+    borderRadius: 180,
+    backgroundColor: 'rgba(201, 150, 82, 0.02)',
   },
   pageStack: {
     gap: 26,

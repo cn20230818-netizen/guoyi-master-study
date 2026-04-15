@@ -29,6 +29,12 @@ const siteLinks = {
   github: 'https://github.com/cn20230818-netizen/guoyi-master-study',
 };
 
+const researchDisclosure = [
+  '当前版本已核对官方机构页、官方转载医案、期刊官网摘要页与论文题录线索，用于提炼三位国医大师的脑病学术主轴。',
+  '我不能诚实地宣称“已读完知网中所有出现姓名的全文论文”，因为中国知网全文访问受账号和版权限制。',
+  '因此网站定位为文献学习与辨机演练，结果页展示的是学习原案与公开案例脉络，而不是对真实患者的自动处方。',
+];
+
 function masterAnswerState(masterId) {
   const master = masters[masterId];
   const firstModule = getAvailableModules(master)[0] || null;
@@ -350,28 +356,34 @@ function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <ScrollView
         contentContainerStyle={[styles.scrollContent, isWide && styles.scrollContentWide]}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.inkBackdrop}>
+          <View style={styles.inkOrbitOne} />
+          <View style={styles.inkOrbitTwo} />
+          <View style={styles.inkOrbitThree} />
+        </View>
+
         <View style={[styles.hero, isWide && styles.heroWide]}>
           <View style={[styles.heroTopRow, isWide && styles.heroTopRowWide]}>
             <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>文献驱动 · 移动端学习版</Text>
+              <Text style={styles.eyebrow}>暗金山水 · 学术展卷</Text>
               <Text style={styles.heroTitle}>国医大师脑病学脉研习</Text>
               <Text style={styles.heroLead}>
-                将张学文、刘祖贻、凃晋文三位大师的公开可核验学术思想，整理成一个可在手机上逐步演练的学习型应用。
+                以张学文、刘祖贻、凃晋文三位国医大师为轴，将脑病论文线索、公开医案与辨证精华重排为一卷可交互浏览的山水式研习网站。
               </Text>
               <View style={styles.heroActionRow}>
                 <Pressable style={styles.primaryHeroButton} onPress={() => openUrl(siteLinks.website)}>
-                  <Text style={styles.primaryHeroButtonText}>正式站点</Text>
+                  <Text style={styles.primaryHeroButtonText}>启卷研读</Text>
                 </Pressable>
                 <Pressable style={styles.ghostHeroButton} onPress={() => openUrl(siteLinks.github)}>
-                  <Text style={styles.ghostHeroButtonText}>GitHub</Text>
+                  <Text style={styles.ghostHeroButtonText}>源码卷宗</Text>
                 </Pressable>
                 <Pressable style={styles.ghostHeroButton} onPress={() => openUrl(siteLinks.privacy)}>
-                  <Text style={styles.ghostHeroButtonText}>隐私政策</Text>
+                  <Text style={styles.ghostHeroButtonText}>研究边界</Text>
                 </Pressable>
               </View>
             </View>
@@ -384,8 +396,12 @@ function App() {
                 <Text style={styles.heroStatLabel}>国医大师</Text>
               </View>
               <View style={styles.heroStatCard}>
-                <Text style={styles.heroStatValue}>5 步</Text>
-                <Text style={styles.heroStatLabel}>辨证引导</Text>
+                <Text style={styles.heroStatValue}>6 门</Text>
+                <Text style={styles.heroStatLabel}>脑病入口</Text>
+              </View>
+              <View style={styles.heroStatCard}>
+                <Text style={styles.heroStatValue}>学术向</Text>
+                <Text style={styles.heroStatLabel}>非患者自诊</Text>
               </View>
             </View>
           </View>
@@ -397,23 +413,37 @@ function App() {
           </View>
 
           <View style={[styles.noticeCard, isWide && styles.noticeCardWide]}>
-            <Text style={styles.noticeTitle}>使用边界</Text>
-            <Text style={styles.noticeText}>本应用用于学习辨证思路与文献原案，不替代线下问诊、处方决策或急诊处置。</Text>
+            <Text style={styles.noticeTitle}>卷首题记</Text>
+            <Text style={styles.noticeText}>此站用于国医大师脑病论文与公开医案学习，不替代真实问诊、急诊处置与执业医师处方决策。</Text>
           </View>
+        </View>
+
+        <View style={[styles.panel, isWide && styles.panelWide]}>
+          <View style={styles.panelHeader}>
+            <View>
+              <Text style={styles.sectionEyebrow}>Research Basis</Text>
+              <Text style={styles.panelTitle}>检索与阅读说明</Text>
+            </View>
+          </View>
+          {researchDisclosure.map((item) => (
+            <View key={item} style={styles.noteCard}>
+              <Text style={styles.noteText}>{item}</Text>
+            </View>
+          ))}
         </View>
 
         <View style={[styles.overviewGrid, isWide && styles.overviewGridWide]}>
           <FeatureCard
-            title="大师学脉"
-            text="首页可在张学文、刘祖贻、凃晋文三位大师之间切换，先抓主张，再进入病机路径。"
+            title="论文精髓提炼"
+            text="不是堆叠论文标题，而是抽取三位大师反复出现的病机主轴、治法骨架和最值得记住的学术句法。"
           />
           <FeatureCard
-            title="五步演练"
-            text="从病种、病期、症状、证素到急重风险，逐步缩小辨证范围，避免一上来就盯死单一症状。"
+            title="五步辨机演练"
+            text="从病种、病期、症状、证素到急重风险，逐步逼近最接近文献原貌的辨证路径。"
           />
           <FeatureCard
-            title="结果可追溯"
-            text="结果页同时展示辨证画像、学习方路和公开文献线索，方便回到原始资料继续深学。"
+            title="方案可回溯"
+            text="结果页同时展示辨证画像、学习方路、药味克数、用法和公开文献线索，方便继续回到原始资料。"
           />
         </View>
 
@@ -506,6 +536,25 @@ function App() {
           </View>
 
           <Text style={styles.panelIntro}>{master.intro}</Text>
+
+          <View style={styles.badgeWrap}>
+            {master.signatureTopics.map((item) => (
+              <View key={item} style={styles.badge}>
+                <Text style={styles.badgeText}>{item}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={[styles.guideGrid, isTablet && styles.guideGridWide]}>
+            {master.paperDigests.map((item, index) => (
+              <GuideCard
+                key={`${master.id}-digest-${index}`}
+                step={`0${index + 1}`}
+                title={`论文精髓 ${index + 1}`}
+                text={item}
+              />
+            ))}
+          </View>
 
           {master.essence.map((item) => (
             <View key={item.title} style={styles.noteCard}>
@@ -721,23 +770,64 @@ function BlockCard({ title, items }) {
 }
 
 const colors = {
-  bg: '#efe4cf',
-  paper: '#fbf6eb',
-  paperDeep: '#f4ecd8',
-  ink: '#2f2923',
-  inkSoft: '#65584a',
-  line: '#d8c7a7',
-  gold: '#8d6831',
-  goldSoft: '#efe2c9',
-  red: '#8b3a2d',
-  jade: '#476a5d',
-  warning: '#f7e7cf',
+  bg: '#100c09',
+  paper: '#1a1410',
+  paperDeep: '#241b15',
+  ink: '#f1e5cf',
+  inkSoft: '#c2b39b',
+  line: '#4c392a',
+  gold: '#cd9850',
+  goldSoft: '#312215',
+  red: '#a45340',
+  jade: '#8aa08f',
+  warning: '#472b1e',
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  inkBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 540,
+    overflow: 'hidden',
+  },
+  inkOrbitOne: {
+    position: 'absolute',
+    top: -120,
+    right: -40,
+    width: 360,
+    height: 360,
+    borderRadius: 999,
+    backgroundColor: '#221711',
+    borderWidth: 1,
+    borderColor: '#3a2a1f',
+  },
+  inkOrbitTwo: {
+    position: 'absolute',
+    top: 46,
+    left: -90,
+    width: 240,
+    height: 240,
+    borderRadius: 999,
+    backgroundColor: '#17120e',
+    borderWidth: 1,
+    borderColor: '#30231b',
+  },
+  inkOrbitThree: {
+    position: 'absolute',
+    top: 220,
+    right: 150,
+    width: 150,
+    height: 150,
+    borderRadius: 999,
+    backgroundColor: '#2d2119',
+    borderWidth: 1,
+    borderColor: '#4a3627',
   },
   scrollContent: {
     padding: 16,
@@ -758,6 +848,10 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: 18,
     gap: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.24,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
   },
   heroWide: {
     padding: 24,
@@ -822,7 +916,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: '#fff8ee',
+    backgroundColor: '#1f1813',
   },
   ghostHeroButtonText: {
     color: colors.ink,
@@ -833,11 +927,11 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 18,
-    backgroundColor: '#f4dfdc',
+    backgroundColor: '#2c1712',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#d9a7a0',
+    borderColor: '#73422f',
     transform: [{ rotate: '-8deg' }],
   },
   sealText: {
@@ -903,7 +997,7 @@ const styles = StyleSheet.create({
   featureCard: {
     flex: 1,
     borderRadius: 22,
-    backgroundColor: '#f8f1e2',
+    backgroundColor: '#18130f',
     borderWidth: 1,
     borderColor: colors.line,
     padding: 18,
@@ -955,7 +1049,7 @@ const styles = StyleSheet.create({
   },
   masterCardActive: {
     borderColor: colors.gold,
-    backgroundColor: '#fff9ef',
+    backgroundColor: '#251a13',
   },
   masterName: {
     color: colors.ink,
@@ -1037,7 +1131,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 220,
     borderRadius: 22,
-    backgroundColor: '#fffaf1',
+    backgroundColor: '#19140f',
     borderWidth: 1,
     borderColor: colors.line,
     padding: 16,
@@ -1090,7 +1184,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: '#f8f1e2',
+    backgroundColor: '#1e1712',
   },
   stepChipActive: {
     borderColor: colors.gold,
@@ -1114,7 +1208,7 @@ const styles = StyleSheet.create({
   },
   optionCard: {
     borderRadius: 18,
-    backgroundColor: '#fffaf1',
+    backgroundColor: '#1d1712',
     borderWidth: 1,
     borderColor: colors.line,
     padding: 14,
@@ -1136,7 +1230,7 @@ const styles = StyleSheet.create({
   },
   tipCard: {
     borderRadius: 16,
-    backgroundColor: '#f8eed9',
+    backgroundColor: '#1f1712',
     borderWidth: 1,
     borderColor: colors.line,
     padding: 13,
@@ -1161,7 +1255,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: '#fffaf1',
+    backgroundColor: '#1c1611',
   },
   choiceChipSelected: {
     backgroundColor: colors.goldSoft,
@@ -1189,7 +1283,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondaryAction: {
-    backgroundColor: '#f7f0e1',
+    backgroundColor: '#201812',
     borderWidth: 1,
     borderColor: colors.line,
   },
@@ -1205,7 +1299,7 @@ const styles = StyleSheet.create({
   },
   placeholderCard: {
     borderRadius: 24,
-    backgroundColor: '#f7f0e1',
+    backgroundColor: '#17120e',
     borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: colors.line,
@@ -1254,7 +1348,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: '#fffaf1',
+    backgroundColor: '#1f1712',
   },
   badgeText: {
     color: colors.inkSoft,
@@ -1292,7 +1386,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: '#fffaf1',
+    backgroundColor: '#1d1713',
   },
   footerLinkText: {
     color: colors.jade,
@@ -1316,7 +1410,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: '#fffaf1',
+    backgroundColor: '#1d1712',
   },
   inlineButtonText: {
     color: colors.jade,
@@ -1330,7 +1424,7 @@ const styles = StyleSheet.create({
   },
   formulaItem: {
     width: '48%',
-    backgroundColor: '#fff9ef',
+    backgroundColor: '#1c1612',
     borderRadius: 16,
     padding: 12,
     borderWidth: 1,

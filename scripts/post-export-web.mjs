@@ -13,6 +13,7 @@ const sharedKeywords = '国医大师,脑病,中医,学术传承,辨证思维,张
 const copies = [
   ['web-static/privacy-policy.html', 'dist/privacy-policy.html'],
   ['web-static/support.html', 'dist/support.html'],
+  ['web-static/b1828553539d3c95ec6ff1448bd0c061.txt', 'dist/b1828553539d3c95ec6ff1448bd0c061.txt'],
 ];
 
 const routePages = [

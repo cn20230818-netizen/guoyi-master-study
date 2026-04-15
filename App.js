@@ -445,6 +445,7 @@ function App() {
 
     const currentKind = kindCopy[formula.kind] || kindCopy.template;
     const isCase = formula.kind === 'case';
+    const literatureCases = formula.literatureCases || [];
 
     return (
         <View style={styles.primaryPanel}>
@@ -489,6 +490,39 @@ function App() {
         )}
 
         {!isCase ? <Text style={styles.primaryPanelText}>{formula.caution}</Text> : null}
+
+        {literatureCases.length ? (
+          <View style={styles.literatureCasePanel}>
+            <Text style={styles.adjustmentTitle}>全文医案参照</Text>
+            <Text style={styles.primaryPanelText}>以下整理自本地全文归档中的代表性论文，主要补充医案脉络与加减线索，不改变现有三家主线。</Text>
+            <View style={styles.literatureCaseList}>
+              {literatureCases.map((item) => (
+                <View key={`${formula.title}-${item.title}`} style={styles.literatureCaseCard}>
+                  <Text style={styles.literatureCaseTitle}>{item.title}</Text>
+                  <Text style={styles.literatureCaseMeta}>{item.citation}</Text>
+                  <Text style={styles.literatureCaseText}>{item.summary}</Text>
+                  {item.herbs?.length ? (
+                    <View style={[styles.formulaGrid, isWide && styles.formulaGridWide]}>
+                      {item.herbs.map(([name, dose]) => (
+                        <View key={`${item.title}-${name}`} style={styles.formulaItem}>
+                          <Text style={styles.formulaName}>{name}</Text>
+                          <Text style={styles.formulaDose}>{dose}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
+                  {item.highlights?.length ? (
+                    <View style={styles.literatureCaseBullets}>
+                      {item.highlights.map((point) => (
+                        <Text key={point} style={styles.literatureCaseText}>• {point}</Text>
+                      ))}
+                    </View>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
       </View>
     );
   };
@@ -1061,7 +1095,6 @@ function StudyPage({
         </View>
         <View style={styles.pageArtworkCaption}>
           <Text style={styles.pageArtworkCaptionTitle}>{master.name} · {masterVisuals[studyMasterId].artTitle}</Text>
-          <Text style={styles.pageArtworkCaptionText}>题图仅作学术展陈氛围。正文与交互区完全分离，避免图文重叠与操作遮挡。</Text>
         </View>
       </View>
 
@@ -2031,12 +2064,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: fontStacks.serif,
   },
-  pageArtworkCaptionText: {
-    color: colors.inkSoft,
-    fontSize: 13,
-    lineHeight: 22,
-    fontFamily: fontStacks.sans,
-  },
   pageTitle: {
     color: colors.ink,
     fontSize: 38,
@@ -2652,6 +2679,43 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     fontFamily: fontStacks.sans,
+  },
+  literatureCasePanel: {
+    gap: 12,
+    marginTop: 4,
+  },
+  literatureCaseList: {
+    gap: 12,
+  },
+  literatureCaseCard: {
+    gap: 10,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.cardSoft,
+  },
+  literatureCaseTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 24,
+    fontFamily: fontStacks.serif,
+  },
+  literatureCaseMeta: {
+    color: colors.gold,
+    fontSize: 12,
+    letterSpacing: 0.6,
+    fontFamily: fontStacks.sans,
+  },
+  literatureCaseText: {
+    color: colors.inkSoft,
+    fontSize: 13,
+    lineHeight: 21,
+    fontFamily: fontStacks.sans,
+  },
+  literatureCaseBullets: {
+    gap: 6,
   },
   methodHeroPanel: {
     gap: 16,

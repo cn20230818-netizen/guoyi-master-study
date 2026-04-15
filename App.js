@@ -545,28 +545,51 @@ function App() {
             <Text style={styles.adjustmentTitle}>全文医案参照</Text>
             <Text style={styles.primaryPanelText}>以下整理自本地全文归档中的代表性论文，主要补充医案脉络与加减线索，不改变现有三家主线。</Text>
             <View style={styles.literatureCaseList}>
-              {literatureCases.map((item) => (
-                <View key={`${formula.title}-${item.title}`} style={styles.literatureCaseCard}>
-                  <Text style={styles.literatureCaseTitle}>{item.title}</Text>
-                  <Text style={styles.literatureCaseMeta}>{item.citation}</Text>
-                  <Text style={styles.literatureCaseText}>{item.summary}</Text>
-                  {item.herbs?.length ? (
-                    <View style={[styles.formulaGrid, isWide && styles.formulaGridWide]}>
-                      {item.herbs.map(([name, dose]) => (
-                        <View key={`${item.title}-${name}`} style={styles.formulaItem}>
-                          <Text style={styles.formulaName}>{name}</Text>
-                          <Text style={styles.formulaDose}>{dose}</Text>
+              {literatureCases.map((item, index) => (
+                <View key={`${formula.title}-${item.title}`} style={styles.literatureScrollShell}>
+                  <View style={styles.literatureScrollCap}>
+                    <Text style={styles.literatureScrollCapText}>医案卷 {index + 1}</Text>
+                  </View>
+                  <View style={styles.literatureCaseCard}>
+                    <View style={styles.literatureCaseHeader}>
+                      <View style={styles.literatureCaseTitleBlock}>
+                        <Text style={styles.literatureCaseMetaLabel}>案目</Text>
+                        <Text style={styles.literatureCaseTitle}>{item.title}</Text>
+                        <Text style={styles.literatureCaseMeta}>{item.citation}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.literatureCaseSection}>
+                      <Text style={styles.literatureCaseMetaLabel}>案旨</Text>
+                      <Text style={styles.literatureCaseText}>{item.summary}</Text>
+                    </View>
+
+                    {item.herbs?.length ? (
+                      <View style={styles.literatureCaseSection}>
+                        <Text style={styles.literatureCaseMetaLabel}>药味摘录</Text>
+                        <View style={[styles.formulaGrid, isWide && styles.formulaGridWide]}>
+                          {item.herbs.map(([name, dose]) => (
+                            <View key={`${item.title}-${name}`} style={styles.formulaItem}>
+                              <Text style={styles.formulaName}>{name}</Text>
+                              <Text style={styles.formulaDose}>{dose}</Text>
+                            </View>
+                          ))}
                         </View>
-                      ))}
-                    </View>
-                  ) : null}
-                  {item.highlights?.length ? (
-                    <View style={styles.literatureCaseBullets}>
-                      {item.highlights.map((point) => (
-                        <Text key={point} style={styles.literatureCaseText}>• {point}</Text>
-                      ))}
-                    </View>
-                  ) : null}
+                      </View>
+                    ) : null}
+
+                    {item.highlights?.length ? (
+                      <View style={styles.literatureCaseSection}>
+                        <Text style={styles.literatureCaseMetaLabel}>加减提要</Text>
+                        <View style={styles.literatureCaseBullets}>
+                          {item.highlights.map((point) => (
+                            <Text key={point} style={styles.literatureCaseText}>• {point}</Text>
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
+                  </View>
+                  <View style={styles.literatureScrollFoot} />
                 </View>
               ))}
             </View>
@@ -2939,15 +2962,69 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   literatureCaseList: {
-    gap: 12,
+    gap: 16,
+  },
+  literatureScrollShell: {
+    gap: 0,
+  },
+  literatureScrollCap: {
+    alignSelf: 'flex-start',
+    minWidth: 104,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: '#6a4d2c',
+    backgroundColor: '#2d1f14',
+  },
+  literatureScrollCapText: {
+    color: colors.gold,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    fontFamily: fontStacks.serif,
+    fontWeight: '700',
   },
   literatureCaseCard: {
-    gap: 10,
-    padding: 14,
-    borderRadius: 14,
+    gap: 14,
+    padding: 16,
+    borderTopRightRadius: 18,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.cardSoft,
+    borderColor: '#6a4d2c',
+    backgroundColor: '#20160f',
+  },
+  literatureScrollFoot: {
+    alignSelf: 'flex-end',
+    width: 72,
+    height: 8,
+    marginTop: -1,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: '#5c4428',
+    backgroundColor: '#24180f',
+  },
+  literatureCaseHeader: {
+    gap: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(201, 150, 82, 0.14)',
+  },
+  literatureCaseTitleBlock: {
+    gap: 6,
+  },
+  literatureCaseSection: {
+    gap: 10,
+  },
+  literatureCaseMetaLabel: {
+    color: colors.gold,
+    fontSize: 12,
+    letterSpacing: 1.4,
+    fontFamily: fontStacks.sans,
   },
   literatureCaseTitle: {
     color: colors.ink,
@@ -2969,7 +3046,7 @@ const styles = StyleSheet.create({
     fontFamily: fontStacks.sans,
   },
   literatureCaseBullets: {
-    gap: 6,
+    gap: 8,
   },
   methodHeroPanel: {
     gap: 16,

@@ -464,13 +464,23 @@ function App() {
           </View>
         ) : null}
 
+        {formula.adjustmentNotes?.length ? (
+          <View style={styles.adjustmentPanel}>
+            <Text style={styles.adjustmentTitle}>本次加减</Text>
+            {formula.adjustmentNotes.map((note) => (
+              <Text key={note} style={styles.adjustmentText}>• {note}</Text>
+            ))}
+          </View>
+        ) : null}
+
         {(!isCase || formulaExpanded) && (
           <>
             <View style={[styles.formulaGrid, isWide && styles.formulaGridWide]}>
-              {formula.herbs.map(([name, dose]) => (
-                <View key={`${formula.title}-${name}`} style={styles.formulaItem}>
-                  <Text style={styles.formulaName}>{name}</Text>
-                  <Text style={styles.formulaDose}>{dose}</Text>
+              {(formula.herbsDetailed || formula.herbs.map(([name, dose]) => ({ name, dose, source: 'base' }))).map((item) => (
+                <View key={`${formula.title}-${item.name}`} style={[styles.formulaItem, item.source === 'adjusted' && styles.formulaItemAdjusted]}>
+                  <Text style={styles.formulaName}>{item.name}</Text>
+                  <Text style={styles.formulaDose}>{item.dose}</Text>
+                  {item.source === 'adjusted' ? <Text style={styles.formulaBadge}>本次加减</Text> : null}
                 </View>
               ))}
             </View>
@@ -671,7 +681,7 @@ function App() {
           <Text style={styles.secondaryPanelText}>学习提示：{copy.completeness}</Text>
         </View>
 
-        {renderFormulaPanel(best.formula)}
+        {renderFormulaPanel(best.resolvedFormula || best.formula)}
 
         {alternative ? (
           <View style={styles.secondaryPanel}>
@@ -1552,59 +1562,53 @@ const styles = StyleSheet.create({
     right: 0,
     height: 620,
     overflow: 'hidden',
+    pointerEvents: 'none',
   },
   mountainOne: {
     position: 'absolute',
-    bottom: 280,
-    left: -80,
-    width: 320,
-    height: 180,
-    borderTopLeftRadius: 220,
-    borderTopRightRadius: 220,
-    backgroundColor: '#15100d',
-    borderWidth: 1,
-    borderColor: '#2b2119',
+    bottom: 250,
+    left: -110,
+    width: 420,
+    height: 230,
+    borderRadius: 280,
+    backgroundColor: 'rgba(31, 23, 18, 0.58)',
   },
   mountainTwo: {
     position: 'absolute',
-    bottom: 240,
-    left: 120,
-    width: 420,
-    height: 220,
-    borderTopLeftRadius: 260,
-    borderTopRightRadius: 260,
-    backgroundColor: '#1b1410',
-    borderWidth: 1,
-    borderColor: '#34271c',
+    bottom: 220,
+    left: 110,
+    width: 520,
+    height: 280,
+    borderRadius: 320,
+    backgroundColor: 'rgba(40, 29, 22, 0.42)',
   },
   mountainThree: {
     position: 'absolute',
-    bottom: 210,
-    right: -90,
-    width: 360,
-    height: 190,
-    borderTopLeftRadius: 220,
-    borderTopRightRadius: 220,
-    backgroundColor: '#231a14',
-    borderWidth: 1,
-    borderColor: '#403023',
+    bottom: 180,
+    right: -130,
+    width: 470,
+    height: 240,
+    borderRadius: 280,
+    backgroundColor: 'rgba(54, 40, 30, 0.28)',
   },
   cloudRibbonOne: {
     position: 'absolute',
     top: 58,
-    right: 68,
+    right: 92,
     width: 220,
-    height: 1,
-    backgroundColor: '#6a512f',
+    height: 28,
+    borderRadius: 28,
+    backgroundColor: 'rgba(201, 150, 82, 0.06)',
     transform: [{ rotate: '-10deg' }],
   },
   cloudRibbonTwo: {
     position: 'absolute',
     top: 92,
-    right: 28,
+    right: 34,
     width: 180,
-    height: 1,
-    backgroundColor: '#6a512f',
+    height: 24,
+    borderRadius: 24,
+    backgroundColor: 'rgba(201, 150, 82, 0.045)',
     transform: [{ rotate: '8deg' }],
   },
   pageStack: {
@@ -2004,7 +2008,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#3c2d22',
+    borderColor: '#35281e',
     backgroundColor: '#0f0b08',
   },
   pageArtworkBand: {
@@ -2018,7 +2022,8 @@ const styles = StyleSheet.create({
   },
   pageArtworkCaption: {
     gap: 4,
-    paddingHorizontal: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
   },
   pageArtworkCaptionTitle: {
     color: colors.ink,
@@ -2537,7 +2542,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#3d2d21',
+    borderColor: '#35281e',
     backgroundColor: '#0f0b08',
   },
   resultArtwork: {
@@ -2606,6 +2611,10 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 4,
   },
+  formulaItemAdjusted: {
+    borderColor: colors.goldSoft,
+    backgroundColor: '#271c14',
+  },
   formulaName: {
     color: colors.ink,
     fontSize: 15,
@@ -2613,6 +2622,32 @@ const styles = StyleSheet.create({
     fontFamily: fontStacks.serif,
   },
   formulaDose: {
+    color: colors.inkSoft,
+    fontSize: 13,
+    lineHeight: 20,
+    fontFamily: fontStacks.sans,
+  },
+  formulaBadge: {
+    color: colors.gold,
+    fontSize: 11,
+    letterSpacing: 1,
+    fontFamily: fontStacks.sans,
+  },
+  adjustmentPanel: {
+    gap: 6,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#5d472d',
+    backgroundColor: '#22170f',
+  },
+  adjustmentTitle: {
+    color: colors.gold,
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: fontStacks.serif,
+  },
+  adjustmentText: {
     color: colors.inkSoft,
     fontSize: 13,
     lineHeight: 20,

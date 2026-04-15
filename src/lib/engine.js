@@ -60,7 +60,7 @@ export function computeResult(master, answers) {
       narrative: '当前输入出现了脑病相关急重风险信号，必须优先急诊评估，而不是继续辨证学习。',
       actions: [
         '立即转入急诊 / 卒中中心 / 神经专科评估。',
-        'APP 只保留病机讲解，不显示学习方路。',
+        '本站只保留学术说明，不继续显示学习方路。',
         '待病情稳定、影像和实验室资料明确后，再回到学习模块。',
       ],
       evidence: master.sources.slice(0, 2),

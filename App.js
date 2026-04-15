@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Linking,
-  Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -12,28 +11,187 @@ import {
   View,
 } from 'react-native';
 import { masters, moduleMeta, commonRedflags, orderedMasterIds } from './src/data/catalog';
-import { computeResult, createAnswers, getAvailableModules, getStepOptions, toggleMultiValue, validateStep } from './src/lib/engine';
-
-const steps = [
-  { key: 'module', label: '选病种' },
-  { key: 'phase', label: '选病期' },
-  { key: 'signs', label: '选症状' },
-  { key: 'constitutions', label: '选证素' },
-  { key: 'redflags', label: '急重风险' },
-];
+import { computeResult, createAnswers, getAvailableModules, toggleMultiValue, validateStep } from './src/lib/engine';
 
 const siteLinks = {
-  website: 'https://cn20230818-netizen.github.io/guoyi-master-study/',
-  privacy: 'https://cn20230818-netizen.github.io/guoyi-master-study/privacy-policy.html',
-  support: 'https://cn20230818-netizen.github.io/guoyi-master-study/support.html',
+  website: 'https://www.guoyinaobing.cn',
+  privacy: 'https://www.guoyinaobing.cn/privacy-policy.html',
+  support: 'https://www.guoyinaobing.cn/support.html',
   github: 'https://github.com/cn20230818-netizen/guoyi-master-study',
 };
 
-const researchDisclosure = [
-  '当前版本已核对官方机构页、官方转载医案、期刊官网摘要页与论文题录线索，用于提炼三位国医大师的脑病学术主轴。',
-  '我不能诚实地宣称“已读完知网中所有出现姓名的全文论文”，因为中国知网全文访问受账号和版权限制。',
-  '因此网站定位为文献学习与辨机演练，结果页展示的是学习原案与公开案例脉络，而不是对真实患者的自动处方。',
+const navItems = [
+  { label: '首页', path: '/' },
+  { label: '三家学脉', path: '/masters' },
+  { label: '研习入口', path: '/study' },
+  { label: '研究方法', path: '/method' },
+  { label: '隐私与支持', external: siteLinks.support },
 ];
+
+const studySteps = [
+  { key: 'redflags', nav: '先辨缓急', title: '先辨缓急', subtitle: '若出现急性偏瘫、意识障碍、爆炸样头痛、持续抽搐、高热抽搐、胸痛呼吸困难等情况，应先急诊评估。' },
+  { key: 'module', nav: '次辨病门', title: '次辨病门', subtitle: '请先决定当前更接近哪一类脑病入口。不同病门，决定后续病机解释与学派偏向。' },
+  { key: 'phase', nav: '再定病势', title: '再定病势', subtitle: '同一病门，不同阶段，其治法轻重与病机主轴并不相同。请先判断当前更接近发作期、恢复期、反复期还是久病期。' },
+  { key: 'signs', nav: '取其主症', title: '取其主症', subtitle: '不要把所有表现都选满。请只保留最能决定病机方向的 1 到 4 个关键线索。' },
+  { key: 'constitutions', nav: '定其证素', title: '定其证素', subtitle: '这里选择的不是表面症状，而是底层证素。脑病最难之处，往往就在于本虚与标实同时存在。' },
+];
+
+const researchCards = [
+  {
+    title: '资料来源',
+    body: [
+      '官方机构页',
+      '官方转载医案',
+      '期刊官网摘要页',
+      '论文题录与目录线索',
+    ],
+  },
+  {
+    title: '整理原则',
+    body: [
+      '只提炼反复出现的病机主轴',
+      '不把孤例当作通则',
+      '原案只用于文献研读展示',
+    ],
+  },
+  {
+    title: '资料边界',
+    body: [
+      '不宣称已完整通读知网全部全文',
+      '不替代临床问诊',
+      '不自动输出现实个体处方',
+    ],
+  },
+  {
+    title: '本站定位',
+    body: [
+      '学术传承',
+      '教学演练',
+      '研究浏览',
+    ],
+  },
+];
+
+const homeGuideCards = [
+  {
+    step: '第一步',
+    title: '先定所宗之学脉',
+    text: '先看哪位大师与你希望理解的脑病路径最相近。',
+  },
+  {
+    step: '第二步',
+    title: '次辨病门与病势',
+    text: '从中风、痫证、颤证、痴呆、失眠、眩晕等入口进入，再区分急缓阶段。',
+  },
+  {
+    step: '第三步',
+    title: '再取主症与证素',
+    text: '不堆症状，只抓真正决定病机方向的线索。',
+  },
+  {
+    step: '第四步',
+    title: '终观病机与方义',
+    text: '结果呈现的是学术路径、治法骨架与公开原案脉络，而不是面向真实患者的处方输出。',
+  },
+];
+
+const homeValueCards = [
+  {
+    title: '学术传承',
+    text: '把三位国医大师脑病相关的公开资料，从“零散可查”整理成“可阅读、可比较、可回溯”的结构。',
+  },
+  {
+    title: '教学演示',
+    text: '适合课堂讲授、病例讨论、带教演练与学术展示。',
+  },
+  {
+    title: '研究浏览',
+    text: '每条路径都附公开资料线索，便于继续回看来源，而不是只停留在站内结果。',
+  },
+];
+
+const heroMottos = ['脑当为脏', '六辨七治', '痰瘀热风同参'];
+
+const masterVisuals = {
+  zhang: {
+    accent: '#b65543',
+    mood: '朱砂印色',
+    line: '脑络金线',
+    summary: '把脑病从附属脏腑论提升为独立病机中心，以脑络、水瘀、痰瘀统摄中风、痫证、眩晕与痴呆。',
+  },
+  liu: {
+    accent: '#6c8794',
+    mood: '黛青格序',
+    line: '体系学派',
+    summary: '擅长把恢复期、后遗期和虚实夹杂证分层拆解，将证素、治法和高频用药规律系统化。',
+  },
+  tu: {
+    accent: '#8c7d5f',
+    mood: '玄青机变',
+    line: '云气流转',
+    summary: '将急症思维与脑病慢病化裁贯通，尤其见长于眩晕、痴呆、失眠等脑病与神志病过渡区域。',
+  },
+};
+
+function normalizePath(path) {
+  if (!path) {
+    return '/';
+  }
+
+  const clean = path.split('?')[0].split('#')[0];
+  if (clean === '/') {
+    return '/';
+  }
+
+  return clean.endsWith('/') ? clean.slice(0, -1) : clean;
+}
+
+function getInitialPath() {
+  if (typeof window === 'undefined') {
+    return '/';
+  }
+
+  return normalizePath(window.location.pathname);
+}
+
+function useSiteRouter() {
+  const [path, setPath] = useState(getInitialPath);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handlePopState = () => {
+      setPath(normalizePath(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = (nextPath) => {
+    const normalized = normalizePath(nextPath);
+
+    if (typeof window !== 'undefined' && normalized !== path) {
+      window.history.pushState({}, '', normalized);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    setPath(normalized);
+  };
+
+  return { path, navigate };
+}
+
+function getMasterIdFromPath(path) {
+  const match = path.match(/^\/masters\/([^/]+)$/);
+  if (!match) {
+    return null;
+  }
+
+  return orderedMasterIds.includes(match[1]) ? match[1] : null;
+}
 
 function masterAnswerState(masterId) {
   const master = masters[masterId];
@@ -41,27 +199,105 @@ function masterAnswerState(masterId) {
   return createAnswers(firstModule);
 }
 
+function classifySource(source) {
+  const title = source.title || '';
+  const note = source.note || '';
+
+  if (note.includes('官方转载') || note.includes('含完整处方') || title.includes('经验')) {
+    return { type: '官方转载医案', usage: '临证原案' };
+  }
+
+  if (note.includes('官方页面') || title.includes('工作室') || title.includes('学术思想') || title.includes('卫健委')) {
+    return { type: '机构官方资料', usage: '学术背景' };
+  }
+
+  if (note.includes('期刊官网摘要')) {
+    return {
+      type: '期刊官网摘要',
+      usage: title.includes('规律') ? '用药规律' : '病机阐释',
+    };
+  }
+
+  if (note.includes('目录') || title.includes('目录')) {
+    return { type: '文献目录索引', usage: '检索线索' };
+  }
+
+  return { type: '公开资料', usage: '参考线索' };
+}
+
+function buildResultCopy(master, best, selectedModule, answers) {
+  const phaseLabel = selectedModule?.phases.find((item) => item.id === answers.phase)?.label || '未标定';
+  const matchedSigns = best.signs.filter((item) => answers.signs.includes(item));
+  const matchedConstitutions = best.constitutions.filter((item) => answers.constitutions.includes(item));
+  const symptomText = matchedSigns.length ? matchedSigns.join('、') : '当前主症资料仍偏少';
+  const constitutionText = matchedConstitutions.length ? matchedConstitutions.join('、') : '当前证素资料仍待补充';
+
+  return {
+    phaseLabel,
+    matchedSigns,
+    matchedConstitutions,
+    heading: `更接近 ${master.name} 的 ${best.label}`,
+    subheading: '你的输入在病门、病势与病机主轴上，更符合这一学术路径。',
+    reasoning: [
+      {
+        title: '病种判断',
+        text: `你所选择的病门为“${selectedModule?.label || '未标定病门'}”，决定了当前首先进入这一类脑病路径。`,
+      },
+      {
+        title: '病期判断',
+        text: `你所标记的阶段为“${phaseLabel}”，使辨证重点偏向当前这一病程层次。`,
+      },
+      {
+        title: '主症判断',
+        text: `你所选择的主症与伴随线索为“${symptomText}”，提示了该路径中更高频出现的病机线索。`,
+      },
+      {
+        title: '证素判断',
+        text: `你所勾选的证素为“${constitutionText}”，显示本虚与标实的重心更接近这一家学脉。`,
+      },
+    ],
+    completeness:
+      answers.constitutions.length < 2 || answers.signs.length < 2
+        ? '当前未输入舌脉、寒热、诱因、睡眠与二便等信息，本结果为学习性粗分层。'
+        : '当前已具备基本辨机线索，但仍建议结合舌脉、寒热、诱因与二便资料继续细分。',
+  };
+}
+
+function buildFormulaMeaning(master, best, copy) {
+  const constitutions = copy.matchedConstitutions.length ? copy.matchedConstitutions.join('、') : '本虚与标实并见';
+  const signs = copy.matchedSigns.length ? copy.matchedSigns.join('、') : '当前病门的高频线索';
+  return `此路以“${best.therapeutic}”为主轴，用来回应 ${constitutions} 与 ${signs} 所指向的病机组合，重点不在套用成方，而在把病机、治法与方义对应起来。`;
+}
+
 function App() {
   const { width } = useWindowDimensions();
-  const [activeMasterId, setActiveMasterId] = useState('zhang');
+  const { path, navigate } = useSiteRouter();
+  const detailMasterId = getMasterIdFromPath(path);
+  const [studyMasterId, setStudyMasterId] = useState('zhang');
   const [answers, setAnswers] = useState(masterAnswerState('zhang'));
   const [stepIndex, setStepIndex] = useState(0);
   const [result, setResult] = useState(null);
   const [errorText, setErrorText] = useState('');
-  const [sourcesVisible, setSourcesVisible] = useState(false);
-  const [policyVisible, setPolicyVisible] = useState(false);
   const [formulaExpanded, setFormulaExpanded] = useState(false);
 
-  const master = masters[activeMasterId];
-  const step = steps[stepIndex];
-  const progress = Math.round(((stepIndex + 1) / steps.length) * 100);
-  const availableModules = getAvailableModules(master);
-  const selectedModule = answers.module ? moduleMeta[answers.module] : null;
-  const isWide = width >= 960;
+  const isWide = width >= 1040;
   const isTablet = width >= 720;
+  const studyMaster = masters[studyMasterId];
+  const selectedModule = answers.module ? moduleMeta[answers.module] : null;
+  const currentStep = studySteps[stepIndex];
 
-  const switchMaster = (masterId) => {
-    setActiveMasterId(masterId);
+  const navigateToStudyWithMaster = (masterId) => {
+    setStudyMasterId(masterId);
+    setAnswers(masterAnswerState(masterId));
+    setStepIndex(0);
+    setResult(null);
+    setErrorText('');
+    setFormulaExpanded(false);
+    navigate('/study');
+  };
+
+  const switchStudyMaster = (masterId) => {
+    setStudyMasterId(masterId);
     setAnswers(masterAnswerState(masterId));
     setStepIndex(0);
     setResult(null);
@@ -77,13 +313,12 @@ function App() {
         next.phase = null;
         next.signs = [];
         next.constitutions = [];
-        next.redflags = [];
       }
 
       return next;
     });
-    setResult(null);
     setErrorText('');
+    setResult(null);
     setFormulaExpanded(false);
   };
 
@@ -92,26 +327,26 @@ function App() {
       ...current,
       [key]: toggleMultiValue(current[key], value),
     }));
-    setResult(null);
     setErrorText('');
+    setResult(null);
     setFormulaExpanded(false);
   };
 
   const goNext = () => {
-    const nextError = validateStep(step.key, answers);
+    const nextError = validateStep(currentStep.key, answers);
 
     if (nextError) {
       setErrorText(nextError);
       return;
     }
 
-    if (stepIndex < steps.length - 1) {
+    if (stepIndex < studySteps.length - 1) {
       setStepIndex((current) => current + 1);
       setErrorText('');
       return;
     }
 
-    setResult(computeResult(master, answers));
+    setResult(computeResult(studyMaster, answers));
     setErrorText('');
     setFormulaExpanded(false);
   };
@@ -125,16 +360,113 @@ function App() {
     setErrorText('');
   };
 
-  const openUrl = async (url) => {
+  const openExternal = async (url) => {
     await Linking.openURL(url);
   };
 
-  const renderStepBody = () => {
-    if (step.key === 'module') {
-      const options = getStepOptions(step.key, answers, master);
+  const renderEvidenceCards = (sourceList) => (
+    <View style={[styles.evidenceGrid, isTablet && styles.evidenceGridWide]}>
+      {sourceList.map((source) => {
+        const meta = classifySource(source);
+        return (
+          <Pressable key={`${source.title}-${source.url}`} style={styles.evidenceCard} onPress={() => openExternal(source.url)}>
+            <View style={styles.evidenceTagRow}>
+              <Text style={styles.evidenceTypeTag}>{meta.type}</Text>
+              <Text style={styles.evidenceUsageTag}>{meta.usage}</Text>
+            </View>
+            <Text style={styles.evidenceTitle}>{source.title}</Text>
+            <Text style={styles.evidenceNote}>{source.note}</Text>
+            <Text style={styles.evidenceLink}>查看原文</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+
+  const renderFormulaPanel = (formula) => {
+    const kindCopy = {
+      case: {
+        heading: '公开医案原方摘录',
+        subheading: '出自公开转载病例，仅用于文献研读。',
+      },
+      rule: {
+        heading: '高频用药规律',
+        subheading: '这是规律层，不是统一门诊原方。',
+      },
+      template: {
+        heading: '方路模板',
+        subheading: '重点看这类方为什么适合该路径。',
+      },
+    };
+
+    const currentKind = kindCopy[formula.kind] || kindCopy.template;
+    const isCase = formula.kind === 'case';
+
+    return (
+        <View style={styles.primaryPanel}>
+        <Text style={styles.panelEyebrow}>公开原案层</Text>
+        <Text style={styles.primaryPanelTitle}>{currentKind.heading}</Text>
+        <Text style={styles.primaryPanelText}>{currentKind.subheading}</Text>
+        <Text style={styles.primaryPanelText}>方义结构：{formula.title}</Text>
+
+        {isCase ? (
+          <View style={styles.warningCard}>
+            <Text style={styles.warningText}>以下为公开医案原案摘录，仅供文献学习，不对应当前真实个体。</Text>
+            <Pressable style={styles.secondaryButton} onPress={() => setFormulaExpanded((current) => !current)}>
+              <Text style={styles.secondaryButtonText}>
+                {formulaExpanded ? '收起原案' : '展开原案摘录'}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {(!isCase || formulaExpanded) && (
+          <>
+            <View style={[styles.formulaGrid, isWide && styles.formulaGridWide]}>
+              {formula.herbs.map(([name, dose]) => (
+                <View key={`${formula.title}-${name}`} style={styles.formulaItem}>
+                  <Text style={styles.formulaName}>{name}</Text>
+                  <Text style={styles.formulaDose}>{dose}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={styles.primaryPanelText}>{formula.usage}</Text>
+          </>
+        )}
+
+        {!isCase ? <Text style={styles.primaryPanelText}>{formula.caution}</Text> : null}
+      </View>
+    );
+  };
+
+  const renderStudyStep = () => {
+    if (currentStep.key === 'redflags') {
       return (
-        <View style={styles.optionColumn}>
-          <TipCard text="先决定你要演练的脑病入口。这个选择会决定后续病期、症状和结果页的文献原案。" />
+        <View style={styles.stepSection}>
+          <Text style={styles.sectionDescription}>{currentStep.subtitle}</Text>
+          <View style={styles.warningCard}>
+            <Text style={styles.warningText}>若存在急性偏瘫、意识障碍、爆炸样头痛、高热抽搐等风险，应优先急诊评估。</Text>
+          </View>
+          <Text style={styles.inlineNote}>如无急重信号，再继续后续研习。</Text>
+          <ChipGrid
+            options={commonRedflags}
+            values={answers.redflags}
+            onPress={(value) => updateMultiValue('redflags', value)}
+          />
+        </View>
+      );
+    }
+
+    if (currentStep.key === 'module') {
+      const options = getAvailableModules(studyMaster).map((id) => ({
+        id,
+        label: moduleMeta[id].label,
+        note: moduleMeta[id].prompt,
+      }));
+
+      return (
+        <View style={styles.stepSection}>
+          <Text style={styles.sectionDescription}>{currentStep.subtitle}</Text>
           {options.map((option) => (
             <Pressable
               key={option.id}
@@ -149,12 +481,11 @@ function App() {
       );
     }
 
-    if (step.key === 'phase' && selectedModule) {
-      const options = getStepOptions(step.key, answers, master);
+    if (currentStep.key === 'phase' && selectedModule) {
       return (
-        <View style={styles.optionColumn}>
-          <TipCard text={`当前路径：${selectedModule.label}。先标记病期，它会直接影响先祛邪还是先扶正的比例。`} />
-          {options.map((option) => (
+        <View style={styles.stepSection}>
+          <Text style={styles.sectionDescription}>{currentStep.subtitle}</Text>
+          {selectedModule.phases.map((option) => (
             <Pressable
               key={option.id}
               style={[styles.optionCard, answers.phase === option.id && styles.optionCardSelected]}
@@ -168,573 +499,602 @@ function App() {
       );
     }
 
-    if (step.key === 'signs' && selectedModule) {
-      const options = getStepOptions(step.key, answers, master);
+    if (currentStep.key === 'signs' && selectedModule) {
       return (
-        <View style={styles.optionColumn}>
-          <TipCard text="可多选 1-4 个最关键症状。不要把所有表现都塞进去，只抓最能决定治法的线索。" />
-          <ChipGrid
-            options={options}
-            values={answers.signs}
-            onPress={(value) => updateMultiValue('signs', value)}
+        <View style={styles.stepSection}>
+          <Text style={styles.sectionDescription}>{currentStep.subtitle}</Text>
+          <DualColumnCard
+            leftTitle="主导症状"
+            rightTitle="伴随线索"
+            leftContent={
+              <ChipGrid options={selectedModule.majorSigns} values={answers.signs} onPress={(value) => updateMultiValue('signs', value)} />
+            }
+            rightContent={
+              <ChipGrid options={selectedModule.companionSigns} values={answers.signs} onPress={(value) => updateMultiValue('signs', value)} />
+            }
           />
         </View>
       );
     }
 
-    if (step.key === 'constitutions' && selectedModule) {
-      const options = getStepOptions(step.key, answers, master);
+    if (currentStep.key === 'constitutions' && selectedModule) {
       return (
-        <View style={styles.optionColumn}>
-          <TipCard text="这里选的是底层证素，而不是表面症状。脑病学习最容易漏掉的，恰恰是气虚、阳虚、肾精不足等本虚因素。" />
-          <ChipGrid
-            options={options}
-            values={answers.constitutions}
-            onPress={(value) => updateMultiValue('constitutions', value)}
+        <View style={styles.stepSection}>
+          <Text style={styles.sectionDescription}>{currentStep.subtitle}</Text>
+          <DualColumnCard
+            leftTitle="本虚因素"
+            rightTitle="标实因素"
+            leftContent={
+              <ChipGrid
+                options={selectedModule.deficiencyFactors}
+                values={answers.constitutions}
+                onPress={(value) => updateMultiValue('constitutions', value)}
+              />
+            }
+            rightContent={
+              <ChipGrid
+                options={selectedModule.excessFactors}
+                values={answers.constitutions}
+                onPress={(value) => updateMultiValue('constitutions', value)}
+              />
+            }
           />
         </View>
       );
     }
 
-    return (
-      <View style={styles.optionColumn}>
-        <TipCard text="若存在以下任一项，应先急诊评估。原型会停止显示学习方路，改成急重分流提醒。" />
-        <ChipGrid
-          options={commonRedflags}
-          values={answers.redflags}
-          onPress={(value) => updateMultiValue('redflags', value)}
-        />
-      </View>
-    );
+    return null;
   };
 
-  const renderFormula = (formula) => {
-    const isCase = formula.kind === 'case';
-
-    return (
-      <View style={styles.blockCard}>
-        <Text style={styles.blockTitle}>{formula.title}</Text>
-        <Text style={styles.blockText}>
-          {isCase
-            ? '默认只展示“这是公开文献原案，不能直接下发”。如需学习原案构成，可手动展开。'
-            : formula.caution}
-        </Text>
-        {isCase ? <Text style={styles.blockText}>{formula.caution}</Text> : null}
-
-        {isCase ? (
-          <Pressable style={styles.inlineButton} onPress={() => setFormulaExpanded((current) => !current)}>
-            <Text style={styles.inlineButtonText}>
-              {formulaExpanded ? '收起原案药味、克数与服法' : '展开原案药味、克数与服法'}
-            </Text>
-          </Pressable>
-        ) : null}
-
-        {(!isCase || formulaExpanded) && (
-          <>
-            <View style={styles.formulaGrid}>
-              {formula.herbs.map(([name, dose]) => (
-                <View key={`${formula.title}-${name}`} style={styles.formulaItem}>
-                  <Text style={styles.formulaName}>{name}</Text>
-                  <Text style={styles.formulaDose}>{dose}</Text>
-                </View>
-              ))}
-            </View>
-            <Text style={styles.blockText}>{formula.usage}</Text>
-          </>
-        )}
-      </View>
-    );
-  };
-
-  const renderResult = () => {
+  const renderStudyResult = () => {
     if (!result) {
       return (
-        <View style={styles.placeholderCard}>
-          <Text style={styles.placeholderText}>完成上方五步后，这里会出现最匹配的学术路径、方路层和文献原案入口。</Text>
+        <View style={styles.secondaryPanel}>
+          <Text style={styles.panelEyebrow}>结果预位</Text>
+          <Text style={styles.secondaryPanelTitle}>终观病机与方义</Text>
+          <Text style={styles.secondaryPanelText}>完成五步之后，这里会按“结论—推理—治法—原案—证据”的层级展开学术路径。</Text>
         </View>
       );
     }
 
     if (result.type === 'emergency') {
       return (
-        <View style={styles.panel}>
-          <View style={styles.resultHeader}>
-            <View>
-              <Text style={styles.pill}>急重分流</Text>
-              <Text style={styles.resultTitle}>{result.title}</Text>
-            </View>
-          </View>
-          <Text style={styles.resultNarrative}>{result.narrative}</Text>
-          <View style={styles.badgeWrap}>
-            {answers.redflags.map((item) => (
-              <View key={item} style={styles.badge}>
-                <Text style={styles.badgeText}>{item}</Text>
-              </View>
-            ))}
-          </View>
-          <BlockCard title="立即动作" items={result.actions} />
-          <View style={styles.blockCard}>
-            <Text style={styles.blockTitle}>参考来源</Text>
-            {result.evidence.map((item) => (
-              <Pressable key={item.url} onPress={() => openUrl(item.url)}>
-                <Text style={styles.linkText}>{item.title}</Text>
-              </Pressable>
-            ))}
-          </View>
+        <View style={styles.primaryPanel}>
+          <Text style={styles.panelEyebrow}>危候分流</Text>
+          <Text style={styles.primaryPanelTitle}>先行急重分流</Text>
+          <Text style={styles.primaryPanelText}>当前输入出现脑病相关风险信号，应优先急诊评估，而非继续学习性分型。</Text>
+          {result.actions.map((item) => (
+            <Text key={item} style={styles.primaryPanelBullet}>• {item}</Text>
+          ))}
+          {renderEvidenceCards(result.evidence)}
         </View>
       );
     }
 
     const best = result.best;
     const alternative = result.alternative;
-    const matchedSigns = best.signs.filter((item) => answers.signs.includes(item));
-    const matchedConstitutions = best.constitutions.filter((item) => answers.constitutions.includes(item));
-    const phaseLabel = selectedModule?.phases.find((item) => item.id === answers.phase)?.label || '未选';
+    const copy = buildResultCopy(studyMaster, best, selectedModule, answers);
 
     return (
-      <View style={styles.panel}>
-        <View style={styles.resultHeader}>
-          <View>
-            <Text style={styles.pill}>{master.name}</Text>
-            <Text style={styles.resultTitle}>{best.label}</Text>
-          </View>
-        </View>
-        <Text style={styles.resultNarrative}>{best.narrative}</Text>
-        <View style={styles.badgeWrap}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{selectedModule?.label}</Text>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{best.therapeutic}</Text>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{phaseLabel}</Text>
+      <View style={styles.resultStack}>
+        <View style={styles.primaryPanel}>
+          <Text style={styles.panelEyebrow}>结论</Text>
+          <Text style={styles.primaryPanelTitle}>{copy.heading}</Text>
+          <Text style={styles.primaryPanelText}>{copy.subheading}</Text>
+          <View style={styles.tagRow}>
+            <Tag text={selectedModule?.label || '病门未定'} />
+            <Tag text={copy.phaseLabel} />
+            <Tag text={best.therapeutic} />
           </View>
         </View>
 
-        <View style={styles.blockCard}>
-          <Text style={styles.blockTitle}>辨证画像</Text>
-          <Text style={styles.blockText}>当前病期：{phaseLabel}</Text>
-          <Text style={styles.blockText}>
-            命中的关键症状：{matchedSigns.length ? matchedSigns.join('、') : '以主病路径推断'}
-          </Text>
-          <Text style={styles.blockText}>
-            命中的底层证素：{matchedConstitutions.length ? matchedConstitutions.join('、') : '建议继续完善四诊资料'}
-          </Text>
-          <Text style={styles.blockText}>对应治法：{best.therapeutic}</Text>
+        <View style={styles.secondaryPanel}>
+          <Text style={styles.panelEyebrow}>推理链</Text>
+          <Text style={styles.secondaryPanelTitle}>辨证推理过程</Text>
+          {copy.reasoning.map((item) => (
+            <View key={item.title} style={styles.reasonCard}>
+              <Text style={styles.reasonTitle}>{item.title}</Text>
+              <Text style={styles.reasonText}>{item.text}</Text>
+            </View>
+          ))}
+          <View style={styles.warningCard}>
+            <Text style={styles.warningText}>{copy.completeness}</Text>
+          </View>
         </View>
 
-        <View style={styles.blockCard}>
-          <Text style={styles.blockTitle}>为什么匹配到这一路</Text>
-          <Text style={styles.blockText}>
-            你的输入更接近这位大师在该病种中的主轴病机。这里不是单看一个症状，而是病期、证素与病机方向一起决定结果。
-          </Text>
+        <View style={styles.secondaryPanel}>
+          <Text style={styles.panelEyebrow}>学术解释</Text>
+          <Text style={styles.secondaryPanelTitle}>这一家为何这样看</Text>
+          <Text style={styles.secondaryPanelText}>{studyMaster.academicInterpretation}</Text>
+          <Text style={styles.secondaryPanelText}>{best.narrative}</Text>
         </View>
 
-        {renderFormula(best.formula)}
+        <View style={styles.secondaryPanel}>
+          <Text style={styles.panelEyebrow}>治法骨架</Text>
+          <Text style={styles.secondaryPanelTitle}>治法与方义</Text>
+          <Text style={styles.secondaryPanelText}>治法主轴：{best.therapeutic}</Text>
+          <Text style={styles.secondaryPanelText}>方义核心：{buildFormulaMeaning(studyMaster, best, copy)}</Text>
+          <Text style={styles.secondaryPanelText}>学习提示：{copy.completeness}</Text>
+        </View>
+
+        {renderFormulaPanel(best.formula)}
 
         {alternative ? (
-          <View style={styles.blockCard}>
-            <Text style={styles.blockTitle}>备选路径</Text>
-            <Text style={styles.blockText}>
-              如果后续补充了寒热、舌苔、二便、情志、既往史，可以再对比 {alternative.label}。
+          <View style={styles.secondaryPanel}>
+            <Text style={styles.panelEyebrow}>备选路径</Text>
+            <Text style={styles.secondaryPanelTitle}>若补足资料，还可对照此路</Text>
+            <Text style={styles.secondaryPanelText}>
+              若后续补充舌脉、寒热、情志、二便、既往史与诱因，还可与 {alternative.label} 进一步比较。
             </Text>
           </View>
         ) : null}
 
-        <View style={styles.blockCard}>
-          <Text style={styles.blockTitle}>证据来源</Text>
-          {master.sources.map((item) => (
-            <Pressable key={item.url} onPress={() => openUrl(item.url)}>
-              <Text style={styles.linkText}>{item.title}</Text>
-            </Pressable>
-          ))}
+        <View style={styles.secondaryPanel}>
+          <Text style={styles.panelEyebrow}>证据来源</Text>
+          <Text style={styles.secondaryPanelTitle}>此页所据公开资料</Text>
+          {renderEvidenceCards(studyMaster.sources)}
         </View>
       </View>
     );
   };
 
+  const currentPage =
+    path === '/'
+      ? (
+        <HomePage
+          isWide={isWide}
+          isTablet={isTablet}
+          navigate={navigate}
+        />
+      )
+      : path === '/masters'
+        ? <MastersPage isWide={isWide} navigate={navigate} />
+        : detailMasterId
+          ? (
+            <MasterDetailPage
+              masterId={detailMasterId}
+              isWide={isWide}
+              isTablet={isTablet}
+              navigateToStudyWithMaster={navigateToStudyWithMaster}
+              renderEvidenceCards={renderEvidenceCards}
+            />
+          )
+          : path === '/study'
+            ? (
+              <StudyPage
+                isWide={isWide}
+                isTablet={isTablet}
+                studyMasterId={studyMasterId}
+                switchStudyMaster={switchStudyMaster}
+                currentStep={currentStep}
+                stepIndex={stepIndex}
+                answers={answers}
+                errorText={errorText}
+                goPrev={goPrev}
+                goNext={goNext}
+                renderStudyStep={renderStudyStep}
+                renderStudyResult={renderStudyResult}
+              />
+            )
+            : path === '/method'
+              ? <MethodPage isWide={isWide} navigate={navigate} />
+              : <NotFoundPage navigate={navigate} />;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, isWide && styles.scrollContentWide]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.inkBackdrop}>
-          <View style={styles.inkOrbitOne} />
-          <View style={styles.inkOrbitTwo} />
-          <View style={styles.inkOrbitThree} />
-        </View>
-
-        <View style={[styles.hero, isWide && styles.heroWide]}>
-          <View style={[styles.heroTopRow, isWide && styles.heroTopRowWide]}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>暗金山水 · 学术展卷</Text>
-              <Text style={styles.heroTitle}>国医大师脑病学脉研习</Text>
-              <Text style={styles.heroLead}>
-                以张学文、刘祖贻、凃晋文三位国医大师为轴，将脑病论文线索、公开医案与辨证精华重排为一卷可交互浏览的山水式研习网站。
-              </Text>
-              <View style={styles.heroActionRow}>
-                <Pressable style={styles.primaryHeroButton} onPress={() => openUrl(siteLinks.website)}>
-                  <Text style={styles.primaryHeroButtonText}>启卷研读</Text>
-                </Pressable>
-                <Pressable style={styles.ghostHeroButton} onPress={() => openUrl(siteLinks.github)}>
-                  <Text style={styles.ghostHeroButtonText}>源码卷宗</Text>
-                </Pressable>
-                <Pressable style={styles.ghostHeroButton} onPress={() => openUrl(siteLinks.privacy)}>
-                  <Text style={styles.ghostHeroButtonText}>研究边界</Text>
-                </Pressable>
-              </View>
-            </View>
-            <View style={[styles.heroAside, isWide && styles.heroAsideWide]}>
-              <View style={styles.seal}>
-                <Text style={styles.sealText}>研习</Text>
-              </View>
-              <View style={styles.heroStatCard}>
-                <Text style={styles.heroStatValue}>3 位</Text>
-                <Text style={styles.heroStatLabel}>国医大师</Text>
-              </View>
-              <View style={styles.heroStatCard}>
-                <Text style={styles.heroStatValue}>6 门</Text>
-                <Text style={styles.heroStatLabel}>脑病入口</Text>
-              </View>
-              <View style={styles.heroStatCard}>
-                <Text style={styles.heroStatValue}>学术向</Text>
-                <Text style={styles.heroStatLabel}>非患者自诊</Text>
-              </View>
-            </View>
+      <View style={styles.appShell}>
+        <SiteHeader currentPath={path} navigate={navigate} openExternal={openExternal} />
+        <ScrollView contentContainerStyle={[styles.pageScroll, isWide && styles.pageScrollWide]} showsVerticalScrollIndicator={false}>
+          <View style={styles.backdropLayer}>
+            <View style={styles.mountainOne} />
+            <View style={styles.mountainTwo} />
+            <View style={styles.mountainThree} />
+            <View style={styles.cloudRibbonOne} />
+            <View style={styles.cloudRibbonTwo} />
           </View>
-
-          <View style={styles.heroChipRow}>
-            <BadgeText text="脑当为脏" />
-            <BadgeText text="六辨七治" />
-            <BadgeText text="痰瘀热风同参" />
-          </View>
-
-          <View style={[styles.noticeCard, isWide && styles.noticeCardWide]}>
-            <Text style={styles.noticeTitle}>卷首题记</Text>
-            <Text style={styles.noticeText}>此站用于国医大师脑病论文与公开医案学习，不替代真实问诊、急诊处置与执业医师处方决策。</Text>
-          </View>
-        </View>
-
-        <View style={[styles.panel, isWide && styles.panelWide]}>
-          <View style={styles.panelHeader}>
-            <View>
-              <Text style={styles.sectionEyebrow}>Research Basis</Text>
-              <Text style={styles.panelTitle}>检索与阅读说明</Text>
-            </View>
-          </View>
-          {researchDisclosure.map((item) => (
-            <View key={item} style={styles.noteCard}>
-              <Text style={styles.noteText}>{item}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={[styles.overviewGrid, isWide && styles.overviewGridWide]}>
-          <FeatureCard
-            title="论文精髓提炼"
-            text="不是堆叠论文标题，而是抽取三位大师反复出现的病机主轴、治法骨架和最值得记住的学术句法。"
-          />
-          <FeatureCard
-            title="五步辨机演练"
-            text="从病种、病期、症状、证素到急重风险，逐步逼近最接近文献原貌的辨证路径。"
-          />
-          <FeatureCard
-            title="方案可回溯"
-            text="结果页同时展示辨证画像、学习方路、药味克数、用法和公开文献线索，方便继续回到原始资料。"
-          />
-        </View>
-
-        <View style={[styles.panel, isWide && styles.panelWide]}>
-          <View style={styles.panelHeader}>
-            <View>
-              <Text style={styles.sectionEyebrow}>How To Use</Text>
-              <Text style={styles.panelTitle}>怎么使用这个网站</Text>
-            </View>
-          </View>
-          <View style={[styles.guideGrid, isTablet && styles.guideGridWide]}>
-            <GuideCard
-              step="01"
-              title="先选大师"
-              text="如果你想学脑病整体框架，先看张学文；想学恢复期拆解，看刘祖贻；想看急慢杂病兼顾，可看凃晋文。"
-            />
-            <GuideCard
-              step="02"
-              title="再选主病与病期"
-              text="优先判断中风、痫证、眩晕、失眠等入口，再分急性、恢复、久病等阶段。"
-            />
-            <GuideCard
-              step="03"
-              title="抓关键线索"
-              text="只选最能决定病机方向的几个症状和证素，不要把所有表现一股脑都选满。"
-            />
-            <GuideCard
-              step="04"
-              title="看学习输出"
-              text="结果会给出匹配路径、治法主轴、学习方路和参考文献，适合教学与继续查阅。"
-            />
-          </View>
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionEyebrow}>Step 1</Text>
-          <Text style={styles.sectionTitle}>选择国医大师</Text>
-        </View>
-
-        {isWide ? (
-          <View style={styles.masterGrid}>
-            {orderedMasterIds.map((masterId) => {
-              const item = masters[masterId];
-              const active = masterId === activeMasterId;
-              return (
-                <Pressable
-                  key={masterId}
-                  style={[styles.masterCard, styles.masterCardGrid, active && styles.masterCardActive]}
-                  onPress={() => switchMaster(masterId)}
-                >
-                  <Text style={styles.masterName}>{item.name}</Text>
-                  <Text style={styles.masterSubtitle}>{item.title}</Text>
-                  <Text style={styles.masterQuote}>{item.quote}</Text>
-                  <Text style={styles.masterDoctrine}>{item.doctrine}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.masterRow}>
-            {orderedMasterIds.map((masterId) => {
-              const item = masters[masterId];
-              const active = masterId === activeMasterId;
-              return (
-                <Pressable
-                  key={masterId}
-                  style={[styles.masterCard, active && styles.masterCardActive]}
-                  onPress={() => switchMaster(masterId)}
-                >
-                  <Text style={styles.masterName}>{item.name}</Text>
-                  <Text style={styles.masterSubtitle}>{item.title}</Text>
-                  <Text style={styles.masterQuote}>{item.quote}</Text>
-                  <Text style={styles.masterDoctrine}>{item.doctrine}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        )}
-
-        <View style={[styles.panel, isWide && styles.panelWide]}>
-          <View style={styles.panelHeader}>
-            <View>
-              <Text style={styles.sectionEyebrow}>Study Notes</Text>
-              <Text style={styles.panelTitle}>{master.name}</Text>
-              <Text style={styles.panelSubTitle}>{master.doctrine}</Text>
-            </View>
-            <Pressable style={styles.inlineButton} onPress={() => setSourcesVisible(true)}>
-              <Text style={styles.inlineButtonText}>文献线索</Text>
-            </Pressable>
-          </View>
-
-          <Text style={styles.panelIntro}>{master.intro}</Text>
-
-          <View style={styles.badgeWrap}>
-            {master.signatureTopics.map((item) => (
-              <View key={item} style={styles.badge}>
-                <Text style={styles.badgeText}>{item}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={[styles.guideGrid, isTablet && styles.guideGridWide]}>
-            {master.paperDigests.map((item, index) => (
-              <GuideCard
-                key={`${master.id}-digest-${index}`}
-                step={`0${index + 1}`}
-                title={`论文精髓 ${index + 1}`}
-                text={item}
-              />
-            ))}
-          </View>
-
-          {master.essence.map((item) => (
-            <View key={item.title} style={styles.noteCard}>
-              <Text style={styles.noteTitle}>{item.title}</Text>
-              <Text style={styles.noteText}>{item.text}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionEyebrow}>Step 2</Text>
-          <Text style={styles.sectionTitle}>逐步辨证引导</Text>
-        </View>
-
-        <View style={[styles.panel, isWide && styles.panelWide]}>
-          <View style={styles.progressRow}>
-            <Text style={styles.progressText}>{stepIndex + 1} / {steps.length}</Text>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${progress}%` }]} />
-            </View>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stepChipRow}>
-            {steps.map((item, index) => (
-              <View key={item.key} style={[styles.stepChip, index === stepIndex && styles.stepChipActive]}>
-                <Text style={[styles.stepChipText, index === stepIndex && styles.stepChipTextActive]}>{item.label}</Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          <Text style={styles.stepTitle}>{step.label}</Text>
-          {renderStepBody()}
-
-          {errorText ? <TipCard tone="warning" text={errorText} /> : null}
-
-          <View style={styles.actionRow}>
-            <Pressable style={[styles.actionButton, styles.secondaryAction]} onPress={goPrev} disabled={stepIndex === 0}>
-              <Text style={styles.secondaryActionText}>上一步</Text>
-            </Pressable>
-            <Pressable style={styles.actionButton} onPress={goNext}>
-              <Text style={styles.actionButtonText}>{stepIndex === steps.length - 1 ? '生成学习画像' : '下一步'}</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionEyebrow}>Step 3</Text>
-          <Text style={styles.sectionTitle}>学习输出</Text>
-        </View>
-        {renderResult()}
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionEyebrow}>Compliance</Text>
-          <Text style={styles.sectionTitle}>隐私与上架准备</Text>
-        </View>
-
-        <View style={[styles.panel, isWide && styles.panelWide]}>
-          <View style={styles.blockCard}>
-            <Text style={styles.blockTitle}>当前应用内隐私承诺</Text>
-            <Text style={styles.blockText}>当前版本不创建账号，不上传病例，不做云端诊断，所有交互仅在本地设备内完成。</Text>
-            <Text style={styles.blockText}>任何公开医案剂量都只作为学习材料展示，不能直接下发给患者。</Text>
-          </View>
-
-          <View style={styles.blockCard}>
-            <Text style={styles.blockTitle}>真正上架前还要补齐</Text>
-            <Text style={styles.blockText}>1. 真实隐私政策 URL 与支持联系方式。</Text>
-            <Text style={styles.blockText}>2. 应用图标、启动图、商店截图和审核演示视频。</Text>
-            <Text style={styles.blockText}>3. 若进入临床辅助决策场景，还要补医师复核、禁忌症和转诊模块。</Text>
-          </View>
-
-          <Pressable style={styles.inlineButton} onPress={() => setPolicyVisible(true)}>
-            <Text style={styles.inlineButtonText}>查看内置隐私与审核说明</Text>
-          </Pressable>
-        </View>
-
-        <View style={[styles.footerCard, isWide && styles.panelWide]}>
-          <Text style={styles.footerTitle}>公开链接</Text>
-          <View style={styles.footerLinkRow}>
-            <Pressable style={styles.footerLink} onPress={() => openUrl(siteLinks.website)}>
-              <Text style={styles.footerLinkText}>主页</Text>
-            </Pressable>
-            <Pressable style={styles.footerLink} onPress={() => openUrl(siteLinks.support)}>
-              <Text style={styles.footerLinkText}>支持页</Text>
-            </Pressable>
-            <Pressable style={styles.footerLink} onPress={() => openUrl(siteLinks.privacy)}>
-              <Text style={styles.footerLinkText}>隐私政策</Text>
-            </Pressable>
-            <Pressable style={styles.footerLink} onPress={() => openUrl(siteLinks.github)}>
-              <Text style={styles.footerLinkText}>源码仓库</Text>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
-
-      <Modal visible={sourcesVisible} animationType="slide" onRequestClose={() => setSourcesVisible(false)}>
-        <SafeAreaView style={styles.modalSafeArea}>
-          <View style={styles.modalHeader}>
-            <View>
-              <Text style={styles.sectionEyebrow}>Evidence</Text>
-              <Text style={styles.modalTitle}>{master.name} · 文献线索</Text>
-            </View>
-            <Pressable style={styles.inlineButton} onPress={() => setSourcesVisible(false)}>
-              <Text style={styles.inlineButtonText}>关闭</Text>
-            </Pressable>
-          </View>
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            {master.sources.map((item) => (
-              <View key={item.url} style={styles.sourceCard}>
-                <Pressable onPress={() => openUrl(item.url)}>
-                  <Text style={styles.linkText}>{item.title}</Text>
-                </Pressable>
-                <Text style={styles.noteText}>{item.note}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
-
-      <Modal visible={policyVisible} animationType="slide" onRequestClose={() => setPolicyVisible(false)}>
-        <SafeAreaView style={styles.modalSafeArea}>
-          <View style={styles.modalHeader}>
-            <View>
-              <Text style={styles.sectionEyebrow}>Policy</Text>
-              <Text style={styles.modalTitle}>隐私与审核说明</Text>
-            </View>
-            <Pressable style={styles.inlineButton} onPress={() => setPolicyVisible(false)}>
-              <Text style={styles.inlineButtonText}>关闭</Text>
-            </Pressable>
-          </View>
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            <View style={styles.sourceCard}>
-              <Text style={styles.noteTitle}>隐私摘要</Text>
-              <Text style={styles.noteText}>当前版本不收集账号信息、不上传问答内容、不集成广告 SDK、不做个性化追踪。</Text>
-              <Text style={styles.noteText}>如果未来接入云端病例、用户账号或分析 SDK，必须同步更新隐私政策与商店申报。</Text>
-            </View>
-            <View style={styles.sourceCard}>
-              <Text style={styles.noteTitle}>审核定位</Text>
-              <Text style={styles.noteText}>建议在商店文案里把产品定位为中医文献学习与辨证教学辅助，而不是患者自助诊疗工具。</Text>
-              <Text style={styles.noteText}>若继续往自动开方方向扩展，苹果和 Google 的健康医疗审核风险都会明显上升。</Text>
-            </View>
-            <View style={styles.sourceCard}>
-              <Text style={styles.noteTitle}>发布阻塞项</Text>
-              <Text style={styles.noteText}>iOS 侧仍缺完整 Xcode、Apple Developer 账号、签名证书和 App Store Connect 元数据。</Text>
-              <Text style={styles.noteText}>Android 侧仍缺 Google Play 开发者账号、正式图标、截图、隐私政策 URL 和最终包名确认。</Text>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
+          {currentPage}
+          <SiteFooter navigate={navigate} openExternal={openExternal} />
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
-function TipCard({ text, tone = 'default' }) {
+function SiteHeader({ currentPath, navigate, openExternal }) {
   return (
-    <View style={[styles.tipCard, tone === 'warning' && styles.tipCardWarning]}>
-      <Text style={styles.tipText}>{text}</Text>
+    <View style={styles.header}>
+      <Pressable style={styles.brandMark} onPress={() => navigate('/')}>
+        <View style={styles.brandSeal}>
+          <Text style={styles.brandSealText}>馆</Text>
+        </View>
+        <View style={styles.brandCopy}>
+          <Text style={styles.brandTitle}>国医大师脑病学术传承馆</Text>
+          <Text style={styles.brandSubTitle}>暗金山水 · 学脉展卷</Text>
+        </View>
+      </Pressable>
+
+      <View style={styles.navRow}>
+        {navItems.map((item) => {
+          const active = item.path ? (item.path === '/' ? currentPath === '/' : currentPath.startsWith(item.path)) : false;
+          return (
+            <Pressable
+              key={item.path || item.external}
+              style={[styles.navLink, active && styles.navLinkActive]}
+              onPress={() => (item.external ? openExternal(item.external) : navigate(item.path))}
+            >
+              <Text style={[styles.navLinkText, active && styles.navLinkTextActive]}>{item.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
-function ChipGrid({ options, values, onPress }) {
+function HomePage({ isWide, isTablet, navigate }) {
   return (
-    <View style={styles.chipGrid}>
-      {options.map((item) => {
-        const label = typeof item === 'string' ? item : item.label;
-        const selected = values.includes(label);
-        return (
-          <Pressable key={label} style={[styles.choiceChip, selected && styles.choiceChipSelected]} onPress={() => onPress(label)}>
-            <Text style={[styles.choiceChipText, selected && styles.choiceChipTextSelected]}>{label}</Text>
-          </Pressable>
-        );
-      })}
+    <View style={styles.pageStack}>
+      <View style={[styles.heroPanel, isWide && styles.heroPanelWide]}>
+        <View style={[styles.heroGrid, isWide && styles.heroGridWide]}>
+          <View style={styles.heroMain}>
+            <Text style={styles.eyebrow}>卷首第一屏</Text>
+            <Text style={styles.heroTitle}>国医大师脑病学术传承馆</Text>
+            <Text style={styles.heroLead}>三位国医大师，三家脑病学脉，一卷可研。</Text>
+            <Text style={styles.heroCaption}>
+              以张学文、刘祖贻、凃晋文三位国医大师为轴，依据公开文献、官方转载医案与代表性学术思想，重构脑病辨证的主轴、治法与方义脉络。
+            </Text>
+            <Text style={styles.heroCaption}>供学术学习、教学演示与研究浏览，不替代真实临床诊疗。</Text>
+            <View style={styles.heroButtonRow}>
+              <PrimaryButton text="进入研习" onPress={() => navigate('/study')} />
+              <SecondaryButton text="浏览三家学脉" onPress={() => navigate('/masters')} />
+            </View>
+          </View>
+
+          <View style={styles.infoPlaque}>
+            <Text style={styles.plaqueEyebrow}>展签</Text>
+            <Text style={styles.plaqueTitle}>三位国医大师</Text>
+            <Text style={styles.plaqueLine}>六大脑病入口</Text>
+            <Text style={styles.plaqueLine}>公开资料映射</Text>
+            <Text style={styles.plaqueLine}>学术演练，不代临床</Text>
+          </View>
+        </View>
+        <View style={styles.heroMottoRow}>
+          {heroMottos.map((item) => (
+            <Text key={item} style={styles.heroMotto}>{item}</Text>
+          ))}
+        </View>
+      </View>
+
+      <SectionHeading eyebrow="Masters" title="三位国医大师，三种脑病视角" />
+      <Text style={styles.sectionLead}>同为脑病，立论各异。有人以脑立脏，有人重本虚标实，有人长于急慢转换。</Text>
+      <Text style={styles.sectionLead}>本站所做，不是把三家混成一套普通辨证，而是尽可能保留各自的学术骨相。</Text>
+      <View style={[styles.tripleGrid, isWide && styles.tripleGridWide]}>
+        {orderedMasterIds.map((masterId) => (
+          <MasterPreviewCard
+            key={masterId}
+            master={masters[masterId]}
+            visual={masterVisuals[masterId]}
+            onDetail={() => navigate(`/masters/${masterId}`)}
+          />
+        ))}
+      </View>
+
+      <SectionHeading eyebrow="Method" title="资料从何而来" />
+      <Text style={styles.sectionLead}>
+        学术传承的第一步，不是做漂亮界面，而是诚实说明：哪些材料已经核对，哪些材料只能作为题录线索，哪些结论属于公开资料上的高频提炼。
+      </Text>
+      <View style={[styles.methodPreviewGrid, isTablet && styles.methodPreviewGridWide]}>
+        {researchCards.map((item) => (
+          <MethodCard key={item.title} title={item.title} items={item.body} />
+        ))}
+      </View>
+      <Text style={styles.sectionLead}>
+        本站当前关于资料边界的表达，直接承接现有研究说明：不能诚实宣称已读完知网所有出现姓名的全文论文，这一点本身就是可信度来源。
+      </Text>
+      <View style={styles.centerRow}>
+        <SecondaryButton text="查看研究方法" onPress={() => navigate('/method')} />
+      </View>
+
+      <SectionHeading eyebrow="Guide" title="如何进入这一卷学问" />
+      <View style={[styles.dualGrid, isTablet && styles.dualGridWide]}>
+        {homeGuideCards.map((item) => (
+          <GuideCard key={item.step} step={item.step} title={item.title} text={item.text} />
+        ))}
+      </View>
+
+      <SectionHeading eyebrow="Value" title="为什么值得用它学习" />
+      <View style={[styles.tripleGrid, isWide && styles.tripleGridWide]}>
+        {homeValueCards.map((item) => (
+          <FeatureCard key={item.title} title={item.title} text={item.text} />
+        ))}
+      </View>
+
+      <SectionHeading eyebrow="Study" title="从病门、病势、主症与证素出发" />
+      <Text style={styles.sectionLead}>看看你的输入，更接近哪一家学脉，哪一种病机路径。</Text>
+      <View style={styles.centerRow}>
+        <PrimaryButton text="进入研习" onPress={() => navigate('/study')} />
+      </View>
     </View>
   );
 }
 
-function BadgeText({ text }) {
+function MastersPage({ isWide, navigate }) {
   return (
-    <View style={styles.badge}>
-      <Text style={styles.badgeText}>{text}</Text>
+    <View style={styles.pageStack}>
+      <PageIntro
+        eyebrow="三家学脉"
+        title="三位国医大师，三种脑病视角"
+        description="同为脑病，立论各异。有人以脑立脏，有人重本虚标实，有人长于急慢转换。这里尽可能保留三家各自的学术骨相。"
+      />
+
+      <View style={[styles.tripleGrid, isWide && styles.tripleGridWide]}>
+        {orderedMasterIds.map((masterId) => (
+          <MasterPreviewCard
+            key={masterId}
+            master={masters[masterId]}
+            visual={masterVisuals[masterId]}
+            onDetail={() => navigate(`/masters/${masterId}`)}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function MasterDetailPage({ masterId, isWide, isTablet, navigateToStudyWithMaster, renderEvidenceCards }) {
+  const master = masters[masterId];
+  const visual = masterVisuals[masterId];
+
+  return (
+    <View style={styles.pageStack}>
+      <View style={[styles.heroPanel, styles.masterHero]}>
+        <Text style={styles.heroTitle}>{master.name}</Text>
+        <Text style={styles.masterSubTitle}>{master.title}</Text>
+        <Text style={[styles.heroLead, styles.masterHeroLead]}>{master.doctrine}</Text>
+        {master.detailIntro.map((paragraph) => (
+          <Text key={paragraph} style={styles.heroCaption}>{paragraph}</Text>
+        ))}
+        <View style={styles.tagRow}>
+          <Tag text={visual.mood} accent={visual.accent} />
+          <Tag text={visual.line} accent={visual.accent} />
+        </View>
+        <View style={styles.heroButtonRow}>
+          <PrimaryButton text="进入研习" onPress={() => navigateToStudyWithMaster(masterId)} />
+        </View>
+      </View>
+
+      <View style={[styles.scrollColumns, isWide && styles.scrollColumnsWide]}>
+        <View style={styles.columnMain}>
+          <SectionHeading eyebrow="Axis" title="学术主轴" />
+          <View style={styles.secondaryPanel}>
+            {master.academicAxes.map((item) => (
+              <Text key={item} style={styles.secondaryPanelText}>• {item}</Text>
+            ))}
+          </View>
+
+          <SectionHeading eyebrow="Paper Digests" title="论文精髓" />
+          <View style={[styles.dualGrid, isTablet && styles.dualGridWide]}>
+            {master.paperDigests.map((item, index) => (
+              <GuideCard key={`${master.id}-${index}`} step={`0${index + 1}`} title={`精髓 ${index + 1}`} text={item} />
+            ))}
+          </View>
+
+          <SectionHeading eyebrow="Essence" title="学术主轴" />
+          <View style={[styles.dualGrid, isTablet && styles.dualGridWide]}>
+            {master.essence.map((item) => (
+              <FeatureCard key={item.title} title={item.title} text={item.text} />
+            ))}
+          </View>
+
+          <SectionHeading eyebrow="Learning Tip" title="学习提示" />
+          <View style={styles.secondaryPanel}>
+            <Text style={styles.secondaryPanelText}>{master.learningTip}</Text>
+          </View>
+        </View>
+
+        <View style={styles.columnSide}>
+          <SectionHeading eyebrow="Pathways" title="代表病门" />
+          <View style={styles.secondaryPanel}>
+            {master.signatureTopics.map((item) => (
+              <Text key={item} style={styles.secondaryPanelText}>• {item}</Text>
+            ))}
+          </View>
+
+          <SectionHeading eyebrow="Evidence" title="可继续回看的公开资料" />
+          {renderEvidenceCards(master.sources)}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function StudyPage({
+  isWide,
+  studyMasterId,
+  switchStudyMaster,
+  currentStep,
+  stepIndex,
+  answers,
+  errorText,
+  goPrev,
+  goNext,
+  renderStudyStep,
+  renderStudyResult,
+}) {
+  const master = masters[studyMasterId];
+  const progress = Math.round(((stepIndex + 1) / studySteps.length) * 100);
+
+  return (
+    <View style={styles.pageStack}>
+      <PageIntro
+        eyebrow="研习入口"
+        title="脑病研习入口"
+        description="此页用于学术演练。请从缓急、病门、病势、主症与证素五个层次，逐步靠近某一条国医大师脑病路径。"
+      />
+
+      <View style={styles.secondaryPanel}>
+        <Text style={styles.panelEyebrow}>学脉选择</Text>
+        <Text style={styles.secondaryPanelTitle}>先定所宗之学脉</Text>
+        <View style={styles.masterSwitchRow}>
+          {orderedMasterIds.map((masterId) => {
+            const active = masterId === studyMasterId;
+            return (
+              <Pressable
+                key={masterId}
+                style={[styles.masterSwitchCard, active && styles.masterSwitchCardActive]}
+                onPress={() => switchStudyMaster(masterId)}
+              >
+                <Text style={[styles.masterSwitchName, active && styles.masterSwitchNameActive]}>{masters[masterId].name}</Text>
+                <Text style={styles.masterSwitchDoctrine}>{masters[masterId].doctrine}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={styles.secondaryPanelText}>当前研习对象：{master.name}</Text>
+      </View>
+
+      <View style={[styles.scrollColumns, isWide && styles.scrollColumnsWide]}>
+        <View style={styles.columnMain}>
+          <View style={styles.primaryPanel}>
+            <Text style={styles.panelEyebrow}>研习次第</Text>
+            <Text style={styles.primaryPanelTitle}>{currentStep.title}</Text>
+            <Text style={styles.primaryPanelText}>{currentStep.subtitle}</Text>
+
+            <View style={styles.progressRow}>
+              <Text style={styles.progressText}>{stepIndex + 1} / {studySteps.length}</Text>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${progress}%` }]} />
+              </View>
+            </View>
+
+            <View style={styles.stepRail}>
+              {studySteps.map((step, index) => {
+                const active = index === stepIndex;
+                return (
+                  <View key={step.key} style={[styles.stepChip, active && styles.stepChipActive]}>
+                    <Text style={[styles.stepChipText, active && styles.stepChipTextActive]}>{step.nav}</Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            {renderStudyStep()}
+
+            {errorText ? (
+              <View style={styles.warningCard}>
+                <Text style={styles.warningText}>{errorText}</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.buttonRow}>
+              <SecondaryButton text="上一步" onPress={goPrev} disabled={stepIndex === 0} />
+              <PrimaryButton text={stepIndex === studySteps.length - 1 ? '生成学术路径' : '下一步'} onPress={goNext} />
+            </View>
+            <Text style={styles.inlineNote}>当前结果仅反映学习性病机归类，不构成临床处方建议。</Text>
+          </View>
+        </View>
+
+        <View style={styles.columnSide}>{renderStudyResult()}</View>
+      </View>
+    </View>
+  );
+}
+
+function MethodPage({ isWide }) {
+  return (
+    <View style={styles.pageStack}>
+      <PageIntro
+        eyebrow="研究方法"
+        title="研究方法与资料边界"
+        description="本站依据公开可核验资料，对三位国医大师脑病相关学术内容进行整理。"
+      />
+
+      <View style={styles.secondaryPanel}>
+        <Text style={styles.secondaryPanelText}>所用资料主要包括官方机构页、官方转载医案、期刊官网摘要页、文献题录与目录线索。</Text>
+        <Text style={styles.secondaryPanelText}>本站不诚称已完整通读中国知网中所有出现相关姓名的全文论文。原因在于全文访问受数据库权限与版权限制。因此，本站的学术结论属于“公开资料基础上的高频主轴提炼”，而非“封闭数据库全文穷尽式综述”。</Text>
+        <Text style={styles.secondaryPanelText}>本站整理时遵循三项原则：其一，只提炼反复出现的病机主轴；其二，不以孤例代替通则；其三，公开原案只作学习展示，不直接转化为现实个体处方。</Text>
+        <Text style={styles.secondaryPanelText}>本站定位为：学术传承、教学演练、研究浏览。</Text>
+        <Text style={styles.secondaryPanelText}>本站不替代线下问诊、急诊评估及执业医师处方决策。若出现急性偏瘫、意识障碍、持续抽搐、爆炸样头痛等情况，应立即就医。</Text>
+      </View>
+
+      <View style={[styles.methodPreviewGrid, isWide && styles.methodPreviewGridWide]}>
+        {researchCards.map((item) => (
+          <MethodCard key={item.title} title={item.title} items={item.body} />
+        ))}
+      </View>
+
+      <View style={styles.secondaryPanel}>
+        <Text style={styles.secondaryPanelTitle}>研习次第</Text>
+        {homeGuideCards.map((item) => (
+          <View key={item.step} style={styles.pathwayListItem}>
+            <Text style={styles.pathwayTitle}>{item.step} · {item.title}</Text>
+            <Text style={styles.pathwayText}>{item.text}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.buttonRow}>
+        <SecondaryButton text="查看隐私与支持" onPress={() => Linking.openURL(siteLinks.support)} />
+      </View>
+    </View>
+  );
+}
+
+function NotFoundPage({ navigate }) {
+  return (
+    <View style={styles.pageStack}>
+      <View style={styles.secondaryPanel}>
+        <Text style={styles.secondaryPanelTitle}>未找到此卷</Text>
+        <Text style={styles.secondaryPanelText}>当前路径不在站点结构内，已为你保留返回首页与进入研习入口。</Text>
+        <View style={styles.buttonRow}>
+          <SecondaryButton text="返回首页" onPress={() => navigate('/')} />
+          <PrimaryButton text="继续研习" onPress={() => navigate('/study')} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function SectionHeading({ eyebrow, title }) {
+  return (
+    <View style={styles.sectionHeading}>
+      <Text style={styles.sectionEyebrow}>{eyebrow}</Text>
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
+}
+
+function PageIntro({ eyebrow, title, description }) {
+  return (
+    <View style={styles.pageIntro}>
+      <Text style={styles.sectionEyebrow}>{eyebrow}</Text>
+      <Text style={styles.pageTitle}>{title}</Text>
+      <Text style={styles.pageDescription}>{description}</Text>
+    </View>
+  );
+}
+
+function PrimaryButton({ text, onPress }) {
+  return (
+    <Pressable style={styles.primaryButton} onPress={onPress}>
+      <Text style={styles.primaryButtonText}>{text}</Text>
+    </Pressable>
+  );
+}
+
+function SecondaryButton({ text, onPress, disabled = false }) {
+  return (
+    <Pressable style={[styles.secondaryButton, disabled && styles.secondaryButtonDisabled]} onPress={onPress} disabled={disabled}>
+      <Text style={[styles.secondaryButtonText, disabled && styles.secondaryButtonTextDisabled]}>{text}</Text>
+    </Pressable>
+  );
+}
+
+function Tag({ text, accent }) {
+  return (
+    <View style={[styles.tag, accent && { borderColor: accent }]}>
+      <Text style={[styles.tagText, accent && { color: accent }]}>{text}</Text>
     </View>
   );
 }
@@ -758,29 +1118,97 @@ function GuideCard({ step, title, text }) {
   );
 }
 
-function BlockCard({ title, items }) {
+function MethodCard({ title, items }) {
   return (
-    <View style={styles.blockCard}>
-      <Text style={styles.blockTitle}>{title}</Text>
+    <View style={styles.methodCard}>
+      <Text style={styles.methodCardTitle}>{title}</Text>
       {items.map((item) => (
-        <Text key={item} style={styles.blockText}>• {item}</Text>
+        <Text key={item} style={styles.methodCardItem}>• {item}</Text>
       ))}
     </View>
   );
 }
 
+function MasterPreviewCard({ master, visual, onDetail }) {
+  return (
+    <View style={styles.masterPreviewCard}>
+      <View style={[styles.masterAccentBar, { backgroundColor: visual.accent }]} />
+      <Text style={styles.masterPreviewName}>{master.name}</Text>
+      <Text style={styles.masterPreviewLabel}>{master.title}</Text>
+      <Text style={styles.masterPreviewCore}>核心命题：{master.doctrine}</Text>
+      <Text style={styles.masterPreviewText}>{visual.summary}</Text>
+      <View style={styles.masterPreviewTagRow}>
+        <Tag text={visual.mood} accent={visual.accent} />
+        <Tag text={visual.line} accent={visual.accent} />
+      </View>
+      <View style={styles.buttonColumn}>
+        <SecondaryButton text={`进入${master.name}学脉`} onPress={onDetail} />
+      </View>
+    </View>
+  );
+}
+
+function DualColumnCard({ leftTitle, rightTitle, leftContent, rightContent }) {
+  return (
+    <View style={styles.dualColumnCard}>
+      <View style={styles.dualColumnItem}>
+        <Text style={styles.dualColumnTitle}>{leftTitle}</Text>
+        {leftContent}
+      </View>
+      <View style={styles.dualColumnItem}>
+        <Text style={styles.dualColumnTitle}>{rightTitle}</Text>
+        {rightContent}
+      </View>
+    </View>
+  );
+}
+
+function ChipGrid({ options, values, onPress }) {
+  return (
+    <View style={styles.chipGrid}>
+      {options.map((item) => {
+        const label = typeof item === 'string' ? item : item.label;
+        const selected = values.includes(label);
+        return (
+          <Pressable key={label} style={[styles.choiceChip, selected && styles.choiceChipSelected]} onPress={() => onPress(label)}>
+            <Text style={[styles.choiceChipText, selected && styles.choiceChipTextSelected]}>{label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function SiteFooter({ navigate, openExternal }) {
+  return (
+    <View style={styles.footer}>
+      <Text style={styles.footerTitle}>站点入口</Text>
+      <View style={styles.footerLinks}>
+        <Pressable onPress={() => navigate('/')}><Text style={styles.footerLink}>首页</Text></Pressable>
+        <Pressable onPress={() => navigate('/masters')}><Text style={styles.footerLink}>三家学脉</Text></Pressable>
+        <Pressable onPress={() => navigate('/study')}><Text style={styles.footerLink}>研习入口</Text></Pressable>
+        <Pressable onPress={() => navigate('/method')}><Text style={styles.footerLink}>研究方法</Text></Pressable>
+        <Pressable onPress={() => openExternal(siteLinks.support)}><Text style={styles.footerLink}>隐私与支持</Text></Pressable>
+        <Pressable onPress={() => openExternal(siteLinks.github)}><Text style={styles.footerLink}>GitHub Repository</Text></Pressable>
+      </View>
+    </View>
+  );
+}
+
 const colors = {
-  bg: '#100c09',
-  paper: '#1a1410',
-  paperDeep: '#241b15',
-  ink: '#f1e5cf',
-  inkSoft: '#c2b39b',
-  line: '#4c392a',
-  gold: '#cd9850',
-  goldSoft: '#312215',
-  red: '#a45340',
+  bg: '#0e0a08',
+  bgRaised: '#17110d',
+  card: '#1a1410',
+  cardSoft: '#221912',
+  cardLight: '#2a1f16',
+  line: '#4b3828',
+  gold: '#c99652',
+  goldSoft: '#7d623b',
+  ink: '#f2e3cc',
+  inkSoft: '#c3b297',
+  red: '#ac5945',
   jade: '#8aa08f',
-  warning: '#472b1e',
+  blue: '#6c8794',
 };
 
 const styles = StyleSheet.create({
@@ -788,93 +1216,205 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
-  inkBackdrop: {
+  appShell: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    backgroundColor: '#120d0a',
+    gap: 14,
+  },
+  brandMark: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  brandSeal: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#2f1712',
+    borderWidth: 1,
+    borderColor: '#7a4331',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandSealText: {
+    color: colors.red,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  brandCopy: {
+    gap: 2,
+  },
+  brandTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  brandSubTitle: {
+    color: colors.inkSoft,
+    fontSize: 12,
+  },
+  navRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  navLink: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.bgRaised,
+  },
+  navLinkActive: {
+    backgroundColor: colors.cardLight,
+    borderColor: colors.gold,
+  },
+  navLinkText: {
+    color: colors.inkSoft,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  navLinkTextActive: {
+    color: colors.ink,
+  },
+  pageScroll: {
+    padding: 20,
+    paddingBottom: 48,
+    gap: 28,
+  },
+  pageScrollWide: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 1320,
+    paddingHorizontal: 28,
+  },
+  backdropLayer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 540,
+    height: 620,
     overflow: 'hidden',
   },
-  inkOrbitOne: {
+  mountainOne: {
     position: 'absolute',
-    top: -120,
-    right: -40,
+    bottom: 280,
+    left: -80,
+    width: 320,
+    height: 180,
+    borderTopLeftRadius: 220,
+    borderTopRightRadius: 220,
+    backgroundColor: '#15100d',
+    borderWidth: 1,
+    borderColor: '#2b2119',
+  },
+  mountainTwo: {
+    position: 'absolute',
+    bottom: 240,
+    left: 120,
+    width: 420,
+    height: 220,
+    borderTopLeftRadius: 260,
+    borderTopRightRadius: 260,
+    backgroundColor: '#1b1410',
+    borderWidth: 1,
+    borderColor: '#34271c',
+  },
+  mountainThree: {
+    position: 'absolute',
+    bottom: 210,
+    right: -90,
     width: 360,
-    height: 360,
-    borderRadius: 999,
-    backgroundColor: '#221711',
+    height: 190,
+    borderTopLeftRadius: 220,
+    borderTopRightRadius: 220,
+    backgroundColor: '#231a14',
     borderWidth: 1,
-    borderColor: '#3a2a1f',
+    borderColor: '#403023',
   },
-  inkOrbitTwo: {
+  cloudRibbonOne: {
     position: 'absolute',
-    top: 46,
-    left: -90,
-    width: 240,
-    height: 240,
-    borderRadius: 999,
-    backgroundColor: '#17120e',
-    borderWidth: 1,
-    borderColor: '#30231b',
+    top: 58,
+    right: 68,
+    width: 220,
+    height: 1,
+    backgroundColor: '#6a512f',
+    transform: [{ rotate: '-10deg' }],
   },
-  inkOrbitThree: {
+  cloudRibbonTwo: {
     position: 'absolute',
-    top: 220,
-    right: 150,
-    width: 150,
-    height: 150,
-    borderRadius: 999,
-    backgroundColor: '#2d2119',
-    borderWidth: 1,
-    borderColor: '#4a3627',
+    top: 92,
+    right: 28,
+    width: 180,
+    height: 1,
+    backgroundColor: '#6a512f',
+    transform: [{ rotate: '8deg' }],
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 28,
-    gap: 14,
+  pageStack: {
+    gap: 26,
   },
-  scrollContentWide: {
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: 1240,
-    paddingHorizontal: 24,
-    paddingBottom: 48,
-  },
-  hero: {
-    backgroundColor: colors.paper,
-    borderRadius: 26,
+  heroPanel: {
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 18,
-    gap: 14,
+    padding: 28,
+    gap: 22,
+    borderRadius: 28,
     shadowColor: '#000',
-    shadowOpacity: 0.24,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.32,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 14 },
   },
-  heroWide: {
-    padding: 24,
-    gap: 18,
+  heroPanelWide: {
+    padding: 34,
   },
-  heroTopRow: {
+  heroGrid: {
+    gap: 20,
+  },
+  heroGridWide: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
+    alignItems: 'stretch',
   },
-  heroTopRowWide: {
-    gap: 24,
+  heroMain: {
+    flex: 1.2,
+    gap: 14,
   },
-  heroCopy: {
-    flex: 1,
-    gap: 10,
+  infoPlaque: {
+    flex: 0.8,
+    backgroundColor: colors.cardSoft,
+    borderWidth: 1,
+    borderColor: colors.goldSoft,
+    padding: 22,
+    borderRadius: 18,
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 220,
   },
-  heroAside: {
-    gap: 10,
-    alignItems: 'flex-end',
+  plaqueEyebrow: {
+    color: colors.gold,
+    fontSize: 12,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
-  heroAsideWide: {
-    minWidth: 184,
+  plaqueTitle: {
+    color: colors.ink,
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  plaqueLine: {
+    color: colors.inkSoft,
+    fontSize: 16,
+    lineHeight: 24,
   },
   eyebrow: {
     color: colors.gold,
@@ -884,263 +1424,315 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     color: colors.ink,
-    fontSize: 32,
-    lineHeight: 38,
-    fontWeight: '700',
+    fontSize: 42,
+    lineHeight: 50,
+    fontWeight: '800',
   },
   heroLead: {
     color: colors.inkSoft,
-    fontSize: 15,
+    fontSize: 17,
+    lineHeight: 29,
+  },
+  heroCaption: {
+    color: colors.inkSoft,
+    fontSize: 14,
     lineHeight: 24,
   },
-  heroActionRow: {
+  heroButtonRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 2,
+    gap: 12,
+    marginTop: 8,
   },
-  primaryHeroButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  heroMottoRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+    paddingTop: 18,
+  },
+  heroMotto: {
+    color: colors.gold,
+    fontSize: 14,
+    letterSpacing: 1.2,
+    fontWeight: '700',
+  },
+  primaryButton: {
+    paddingHorizontal: 18,
+    paddingVertical: 13,
     borderRadius: 999,
     backgroundColor: colors.gold,
   },
-  primaryHeroButtonText: {
-    color: '#fffdf8',
-    fontSize: 14,
-    fontWeight: '700',
+  primaryButtonText: {
+    color: '#1a130d',
+    fontSize: 15,
+    fontWeight: '800',
   },
-  ghostHeroButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: '#1f1813',
-  },
-  ghostHeroButtonText: {
-    color: colors.ink,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  seal: {
-    width: 72,
-    height: 72,
-    borderRadius: 18,
-    backgroundColor: '#2c1712',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#73422f',
-    transform: [{ rotate: '-8deg' }],
-  },
-  sealText: {
-    color: colors.red,
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  heroStatCard: {
-    minWidth: 112,
-    borderRadius: 18,
-    backgroundColor: colors.paperDeep,
-    borderWidth: 1,
-    borderColor: colors.line,
-    paddingHorizontal: 14,
+  secondaryButton: {
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    gap: 4,
-  },
-  heroStatValue: {
-    color: colors.ink,
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  heroStatLabel: {
-    color: colors.inkSoft,
-    fontSize: 13,
-  },
-  heroChipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  noticeCard: {
-    borderRadius: 18,
-    backgroundColor: colors.paperDeep,
-    padding: 14,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.line,
-    gap: 8,
+    backgroundColor: colors.cardSoft,
   },
-  noticeCardWide: {
-    padding: 16,
+  secondaryButtonDisabled: {
+    opacity: 0.45,
   },
-  noticeTitle: {
+  secondaryButtonText: {
     color: colors.ink,
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: '700',
   },
-  noticeText: {
+  secondaryButtonTextDisabled: {
     color: colors.inkSoft,
-    fontSize: 14,
-    lineHeight: 22,
   },
-  sectionHeader: {
+  sectionHeading: {
     gap: 4,
-    marginTop: 6,
   },
-  overviewGrid: {
-    gap: 12,
+  sectionEyebrow: {
+    color: colors.gold,
+    fontSize: 12,
+    letterSpacing: 1.8,
+    textTransform: 'uppercase',
   },
-  overviewGridWide: {
+  sectionTitle: {
+    color: colors.ink,
+    fontSize: 30,
+    fontWeight: '700',
+  },
+  sectionLead: {
+    color: colors.inkSoft,
+    fontSize: 15,
+    lineHeight: 25,
+    maxWidth: 980,
+  },
+  tripleGrid: {
+    gap: 16,
+  },
+  tripleGridWide: {
     flexDirection: 'row',
   },
   featureCard: {
     flex: 1,
-    borderRadius: 22,
-    backgroundColor: '#18130f',
+    backgroundColor: colors.bgRaised,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 18,
-    gap: 8,
+    borderRadius: 20,
+    padding: 20,
+    gap: 10,
   },
   featureTitle: {
     color: colors.ink,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
   },
   featureText: {
     color: colors.inkSoft,
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 24,
   },
-  sectionEyebrow: {
-    color: colors.gold,
-    fontSize: 12,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
+  masterPreviewCard: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 24,
+    padding: 22,
+    gap: 12,
   },
-  sectionTitle: {
+  masterAccentBar: {
+    width: 72,
+    height: 3,
+    borderRadius: 999,
+  },
+  masterPreviewName: {
     color: colors.ink,
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
   },
-  masterRow: {
-    gap: 12,
-    paddingRight: 8,
+  masterPreviewLabel: {
+    color: colors.inkSoft,
+    fontSize: 13,
   },
-  masterGrid: {
+  masterPreviewCore: {
+    color: colors.gold,
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 24,
+  },
+  masterPreviewText: {
+    color: colors.inkSoft,
+    fontSize: 14,
+    lineHeight: 24,
+  },
+  masterPreviewTagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 14,
+    gap: 8,
   },
-  masterCard: {
-    width: 240,
-    backgroundColor: colors.paper,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 16,
-    gap: 10,
-  },
-  masterCardGrid: {
-    width: '31.5%',
-    minWidth: 260,
-    flexGrow: 1,
-  },
-  masterCardActive: {
-    borderColor: colors.gold,
-    backgroundColor: '#251a13',
-  },
-  masterName: {
-    color: colors.ink,
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  masterSubtitle: {
-    color: colors.inkSoft,
-    fontSize: 13,
-  },
-  masterQuote: {
-    color: colors.ink,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  masterDoctrine: {
-    color: colors.gold,
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  panel: {
-    backgroundColor: colors.paper,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 16,
-    gap: 14,
-  },
-  panelWide: {
-    padding: 22,
-  },
-  panelHeader: {
+  tagRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    alignItems: 'flex-start',
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  panelTitle: {
-    color: colors.ink,
-    fontSize: 24,
-    fontWeight: '700',
+  tag: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.cardSoft,
   },
-  panelSubTitle: {
+  tagText: {
     color: colors.inkSoft,
     fontSize: 13,
-    marginTop: 2,
+    fontWeight: '700',
   },
-  panelIntro: {
+  buttonColumn: {
+    gap: 10,
+    marginTop: 6,
+  },
+  methodPreviewGrid: {
+    gap: 16,
+  },
+  methodPreviewGridWide: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  methodCard: {
+    flex: 1,
+    minWidth: 220,
+    backgroundColor: colors.bgRaised,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 20,
+    padding: 18,
+    gap: 8,
+  },
+  methodCardTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  methodCardItem: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 23,
   },
-  noteCard: {
-    borderRadius: 18,
-    backgroundColor: colors.paperDeep,
-    padding: 14,
+  centerRow: {
+    alignItems: 'flex-start',
+  },
+  pageIntro: {
+    gap: 8,
+  },
+  pageTitle: {
+    color: colors.ink,
+    fontSize: 38,
+    fontWeight: '800',
+  },
+  pageDescription: {
+    color: colors.inkSoft,
+    fontSize: 15,
+    lineHeight: 25,
+    maxWidth: 940,
+  },
+  masterHero: {
+    gap: 14,
+  },
+  masterSubTitle: {
+    color: colors.inkSoft,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  masterHeroLead: {
+    color: colors.gold,
+  },
+  scrollColumns: {
+    gap: 18,
+  },
+  scrollColumnsWide: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  columnMain: {
+    flex: 1.2,
+    gap: 22,
+  },
+  columnSide: {
+    flex: 0.8,
+    gap: 22,
+  },
+  secondaryPanel: {
+    backgroundColor: colors.bgRaised,
     borderWidth: 1,
     borderColor: colors.line,
-    gap: 6,
+    borderRadius: 22,
+    padding: 20,
+    gap: 14,
   },
-  noteTitle: {
+  primaryPanel: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.goldSoft,
+    borderRadius: 24,
+    padding: 22,
+    gap: 16,
+  },
+  panelEyebrow: {
+    color: colors.gold,
+    fontSize: 12,
+    letterSpacing: 1.8,
+    textTransform: 'uppercase',
+  },
+  primaryPanelTitle: {
     color: colors.ink,
-    fontSize: 16,
+    fontSize: 28,
+    fontWeight: '800',
+    lineHeight: 38,
+  },
+  primaryPanelText: {
+    color: colors.inkSoft,
+    fontSize: 15,
+    lineHeight: 25,
+  },
+  primaryPanelBullet: {
+    color: colors.inkSoft,
+    fontSize: 15,
+    lineHeight: 25,
+  },
+  secondaryPanelTitle: {
+    color: colors.ink,
+    fontSize: 24,
     fontWeight: '700',
   },
-  noteText: {
+  secondaryPanelText: {
     color: colors.inkSoft,
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 24,
   },
-  guideGrid: {
-    gap: 12,
+  dualGrid: {
+    gap: 14,
   },
-  guideGridWide: {
+  dualGridWide: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   guideCard: {
     flex: 1,
     minWidth: 220,
-    borderRadius: 22,
-    backgroundColor: '#19140f',
+    backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     gap: 8,
   },
   guideStep: {
     color: colors.gold,
     fontSize: 12,
-    letterSpacing: 1.6,
+    letterSpacing: 1.8,
     fontWeight: '700',
   },
   guideTitle: {
@@ -1151,7 +1743,100 @@ const styles = StyleSheet.create({
   guideText: {
     color: colors.inkSoft,
     fontSize: 14,
+    lineHeight: 23,
+  },
+  pathwayListItem: {
+    gap: 6,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+  },
+  pathwayTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 24,
+  },
+  pathwayText: {
+    color: colors.inkSoft,
+    fontSize: 14,
     lineHeight: 22,
+  },
+  evidenceGrid: {
+    gap: 12,
+  },
+  evidenceGridWide: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  evidenceCard: {
+    flex: 1,
+    minWidth: 220,
+    backgroundColor: colors.cardSoft,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 18,
+    padding: 16,
+    gap: 8,
+  },
+  evidenceTagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  evidenceTypeTag: {
+    color: colors.gold,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  evidenceUsageTag: {
+    color: colors.jade,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  evidenceTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 24,
+  },
+  evidenceNote: {
+    color: colors.inkSoft,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  evidenceLink: {
+    color: colors.jade,
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
+  masterSwitchRow: {
+    gap: 12,
+  },
+  masterSwitchCard: {
+    backgroundColor: colors.cardSoft,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 16,
+    padding: 16,
+    gap: 6,
+  },
+  masterSwitchCardActive: {
+    borderColor: colors.gold,
+    backgroundColor: colors.cardLight,
+  },
+  masterSwitchName: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  masterSwitchNameActive: {
+    color: colors.gold,
+  },
+  masterSwitchDoctrine: {
+    color: colors.inkSoft,
+    fontSize: 13,
+    lineHeight: 21,
   },
   progressRow: {
     flexDirection: 'row',
@@ -1159,64 +1844,70 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   progressText: {
-    width: 44,
     color: colors.inkSoft,
     fontSize: 13,
+    width: 48,
   },
   progressTrack: {
     flex: 1,
-    height: 10,
+    height: 8,
     borderRadius: 999,
-    backgroundColor: colors.goldSoft,
+    backgroundColor: '#2b2016',
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 999,
     backgroundColor: colors.gold,
   },
-  stepChipRow: {
-    gap: 8,
+  stepRail: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
   stepChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: '#1e1712',
+    backgroundColor: colors.cardSoft,
   },
   stepChipActive: {
     borderColor: colors.gold,
-    backgroundColor: colors.goldSoft,
+    backgroundColor: '#322418',
   },
   stepChipText: {
     color: colors.inkSoft,
     fontSize: 13,
+    fontWeight: '600',
   },
   stepChipTextActive: {
     color: colors.ink,
-    fontWeight: '700',
   },
-  stepTitle: {
-    color: colors.ink,
-    fontSize: 22,
-    fontWeight: '700',
+  stepSection: {
+    gap: 14,
   },
-  optionColumn: {
-    gap: 10,
+  sectionDescription: {
+    color: colors.inkSoft,
+    fontSize: 14,
+    lineHeight: 23,
+  },
+  inlineNote: {
+    color: colors.inkSoft,
+    fontSize: 13,
+    lineHeight: 21,
   },
   optionCard: {
-    borderRadius: 18,
-    backgroundColor: '#1d1712',
+    backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 14,
+    borderRadius: 16,
+    padding: 16,
     gap: 6,
   },
   optionCardSelected: {
     borderColor: colors.gold,
-    backgroundColor: colors.goldSoft,
+    backgroundColor: '#302317',
   },
   optionTitle: {
     color: colors.ink,
@@ -1226,23 +1917,23 @@ const styles = StyleSheet.create({
   optionMeta: {
     color: colors.inkSoft,
     fontSize: 14,
-    lineHeight: 21,
+    lineHeight: 22,
   },
-  tipCard: {
-    borderRadius: 16,
-    backgroundColor: '#1f1712',
+  dualColumnCard: {
+    gap: 12,
+  },
+  dualColumnItem: {
+    backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 13,
+    borderRadius: 18,
+    padding: 16,
+    gap: 10,
   },
-  tipCardWarning: {
-    backgroundColor: colors.warning,
-    borderColor: '#d7af79',
-  },
-  tipText: {
-    color: colors.inkSoft,
-    fontSize: 14,
-    lineHeight: 21,
+  dualColumnTitle: {
+    color: colors.gold,
+    fontSize: 16,
+    fontWeight: '700',
   },
   chipGrid: {
     flexDirection: 'row',
@@ -1250,16 +1941,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   choiceChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: '#1c1611',
   },
   choiceChipSelected: {
-    backgroundColor: colors.goldSoft,
     borderColor: colors.gold,
+    backgroundColor: '#342417',
   },
   choiceChipText: {
     color: colors.inkSoft,
@@ -1269,166 +1960,60 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontWeight: '700',
   },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 6,
-  },
-  actionButton: {
-    flex: 1,
-    backgroundColor: colors.gold,
-    paddingVertical: 14,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryAction: {
-    backgroundColor: '#201812',
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  actionButtonText: {
-    color: '#fffdf8',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  secondaryActionText: {
-    color: colors.ink,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  placeholderCard: {
-    borderRadius: 24,
-    backgroundColor: '#17120e',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.line,
-    padding: 18,
-  },
-  placeholderText: {
-    color: colors.inkSoft,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  resultHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  pill: {
-    alignSelf: 'flex-start',
-    color: colors.gold,
-    backgroundColor: colors.goldSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginBottom: 8,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  resultTitle: {
-    color: colors.ink,
-    fontSize: 24,
-    fontWeight: '700',
-    lineHeight: 32,
-  },
-  resultNarrative: {
-    color: colors.inkSoft,
-    fontSize: 14,
-    lineHeight: 23,
-  },
-  badgeWrap: {
+  buttonRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: '#1f1712',
-  },
-  badgeText: {
-    color: colors.inkSoft,
-    fontSize: 13,
-  },
-  blockCard: {
-    borderRadius: 18,
-    backgroundColor: colors.paperDeep,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 14,
-    gap: 8,
-  },
-  footerCard: {
-    borderRadius: 24,
-    backgroundColor: colors.paper,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 18,
     gap: 12,
   },
-  footerTitle: {
-    color: colors.ink,
-    fontSize: 18,
-    fontWeight: '700',
+  resultStack: {
+    gap: 18,
   },
-  footerLinkRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  footerLink: {
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderRadius: 999,
+  reasonCard: {
+    backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: '#1d1713',
+    borderRadius: 18,
+    padding: 16,
+    gap: 6,
   },
-  footerLinkText: {
-    color: colors.jade,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  blockTitle: {
-    color: colors.gold,
+  reasonTitle: {
+    color: colors.ink,
     fontSize: 16,
     fontWeight: '700',
   },
-  blockText: {
+  reasonText: {
     color: colors.inkSoft,
     fontSize: 14,
     lineHeight: 22,
   },
-  inlineButton: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 999,
+  warningCard: {
+    backgroundColor: '#2a1b13',
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: '#1d1712',
+    borderColor: colors.goldSoft,
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
   },
-  inlineButtonText: {
-    color: colors.jade,
-    fontSize: 13,
-    fontWeight: '700',
+  warningText: {
+    color: colors.inkSoft,
+    fontSize: 14,
+    lineHeight: 22,
   },
   formulaGrid: {
+    gap: 10,
+  },
+  formulaGridWide: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   formulaItem: {
-    width: '48%',
-    backgroundColor: '#1c1612',
-    borderRadius: 16,
-    padding: 12,
+    minWidth: 180,
+    flexGrow: 1,
+    backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.line,
+    borderRadius: 16,
+    padding: 14,
     gap: 4,
   },
   formulaName: {
@@ -1439,42 +2024,29 @@ const styles = StyleSheet.create({
   formulaDose: {
     color: colors.inkSoft,
     fontSize: 13,
+    lineHeight: 20,
   },
-  linkText: {
-    color: colors.jade,
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: 8,
+  footer: {
+    marginTop: 16,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+    gap: 10,
   },
-  modalSafeArea: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
-    alignItems: 'flex-start',
-  },
-  modalTitle: {
+  footerTitle: {
     color: colors.ink,
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
   },
-  modalContent: {
-    padding: 16,
-    gap: 12,
+  footerLinks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
   },
-  sourceCard: {
-    borderRadius: 20,
-    backgroundColor: colors.paper,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    gap: 8,
+  footerLink: {
+    color: colors.jade,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
 

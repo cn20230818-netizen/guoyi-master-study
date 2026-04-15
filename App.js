@@ -72,7 +72,7 @@ const cloudSources = {
 };
 
 const copyrightNotice =
-  '版权说明：本站内容由项目维护者基于公开可核验资料整理。原始论文、期刊页面、机构资料、公开转载医案及其题名、摘要、图片等相关权利归原作者、原期刊、原机构或原发布平台所有。本站仅作学术传承、教学演练与研究浏览使用；如有版权异议、资料更正或下架请求，请联系 cn20230818@gmail.com。';
+  '版权说明：本站内容由项目维护者基于公开可核验资料整理。原始论文、期刊页面、机构资料、公开转载医案及其题名、摘要、图片等相关权利归原作者、原期刊、原机构或原发布平台所有。未经许可，禁止对本站页面内容、整理结构、图文材料进行转载、镜像、摘编或商业性使用；如有版权异议、资料更正、下架请求或商务合作，请联系 cn20230818@gmail.com。';
 
 const navItems = [
   { label: '首页', path: '/' },
@@ -1544,8 +1544,8 @@ function SiteFooter({ navigate, openExternal }) {
         <Pressable onPress={() => openExternal(siteLinks.support)}><Text style={styles.footerLink}>隐私与支持</Text></Pressable>
         <Pressable onPress={() => openExternal(siteLinks.github)}><Text style={styles.footerLink}>GitHub Repository</Text></Pressable>
       </View>
-      <Text style={styles.footerNote}>版权说明：原始论文、期刊页面、机构资料与公开转载医案等相关权利归原权利人所有，本站仅作学术传承、教学演练与研究浏览使用。</Text>
-      <Text style={styles.footerNote}>如有版权异议、资料更正或下架请求，请联系 cn20230818@gmail.com。</Text>
+      <Text style={styles.footerNote}>未经许可，禁止对本站页面内容、整理结构、图文材料进行转载、镜像、摘编或商业性使用。</Text>
+      <Text style={styles.footerNote}>如有版权异议、资料更正、下架请求或商务合作，请联系 cn20230818@gmail.com。</Text>
     </View>
   );
 }

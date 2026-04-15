@@ -55,6 +55,20 @@ const cloudSources = {
       <path d="M294 84c18-8 38-8 60 0-14 3-22 8-25 14 10 1 21 5 33 11-19 2-35 0-48-6-5-2-11-4-18-4 6-7 5-12-2-15z" stroke="#c99652" stroke-opacity=".22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   `),
+  paper: createSvgDataUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="720" height="520" viewBox="0 0 720 520" fill="none">
+      <rect x="34" y="34" width="652" height="452" rx="26" fill="#d3b07a" fill-opacity=".04"/>
+      <rect x="58" y="58" width="604" height="404" rx="20" stroke="#c99652" stroke-opacity=".12" stroke-width="2"/>
+      <path d="M110 132h244" stroke="#c99652" stroke-opacity=".16" stroke-width="3" stroke-linecap="round"/>
+      <path d="M110 172h388" stroke="#c99652" stroke-opacity=".1" stroke-width="2" stroke-linecap="round"/>
+      <path d="M110 210h344" stroke="#c99652" stroke-opacity=".1" stroke-width="2" stroke-linecap="round"/>
+      <path d="M110 248h376" stroke="#c99652" stroke-opacity=".1" stroke-width="2" stroke-linecap="round"/>
+      <path d="M110 286h316" stroke="#c99652" stroke-opacity=".1" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="570" cy="168" r="40" stroke="#b65543" stroke-opacity=".14" stroke-width="5"/>
+      <circle cx="570" cy="168" r="22" stroke="#b65543" stroke-opacity=".1" stroke-width="3"/>
+      <path d="M514 356c22-14 44-20 67-20 18 0 34 4 47 11 15-10 33-15 56-15 28 0 53 9 76 26-24-4-45-2-64 5 9 5 16 12 20 20-22-2-41-8-57-17-9-5-19-7-33-7-11 0-22 2-34 6-13 10-30 15-52 15-17 0-31-4-43-11 8-4 13-9 17-13z" fill="#c99652" fill-opacity=".05"/>
+    </svg>
+  `),
 };
 
 const copyrightNotice =
@@ -245,6 +259,18 @@ function getMasterIdFromPath(path) {
   return orderedMasterIds.includes(match[1]) ? match[1] : null;
 }
 
+function getBackdropMode(path) {
+  if (path === '/study') {
+    return 'study';
+  }
+
+  if (path === '/method') {
+    return 'method';
+  }
+
+  return 'home';
+}
+
 function masterAnswerState(masterId) {
   const master = masters[masterId];
   const firstModule = getAvailableModules(master)[0] || null;
@@ -348,6 +374,7 @@ function App() {
   const isWide = width >= 1040;
   const isTablet = width >= 720;
   const isMobile = width < 720;
+  const backdropMode = getBackdropMode(path);
   const studyMaster = masters[studyMasterId];
   const selectedModule = answers.module ? moduleMeta[answers.module] : null;
   const currentStep = studySteps[stepIndex];
@@ -813,12 +840,32 @@ function App() {
             <View style={styles.mountainOne} />
             <View style={styles.mountainTwo} />
             <View style={styles.mountainThree} />
-            <Image source={{ uri: cloudSources.broad }} style={[styles.backdropCloud, styles.backdropCloudTopRight, isMobile && styles.backdropCloudTopRightMobile]} resizeMode="contain" />
-            <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.backdropCloudTopLeft, isMobile && styles.backdropCloudTopLeftMobile]} resizeMode="contain" />
-            <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.backdropCloudMiddle, isMobile && styles.backdropCloudMiddleMobile]} resizeMode="contain" />
-            <Image source={{ uri: cloudSources.broad }} style={[styles.backdropCloud, styles.backdropCloudBottom, isMobile && styles.backdropCloudBottomMobile]} resizeMode="contain" />
-            <View style={styles.cloudMistOne} />
-            <View style={styles.cloudMistTwo} />
+            {backdropMode === 'home' ? (
+              <>
+                <Image source={{ uri: cloudSources.broad }} style={[styles.backdropCloud, styles.backdropCloudTopRight, isMobile && styles.backdropCloudTopRightMobile]} resizeMode="contain" />
+                <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.backdropCloudTopLeft, isMobile && styles.backdropCloudTopLeftMobile]} resizeMode="contain" />
+                <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.backdropCloudMiddle, isMobile && styles.backdropCloudMiddleMobile]} resizeMode="contain" />
+                <Image source={{ uri: cloudSources.broad }} style={[styles.backdropCloud, styles.backdropCloudBottom, isMobile && styles.backdropCloudBottomMobile]} resizeMode="contain" />
+                <View style={styles.cloudMistOne} />
+                <View style={styles.cloudMistTwo} />
+              </>
+            ) : null}
+            {backdropMode === 'study' ? (
+              <>
+                <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.studyCloudTopLeft, isMobile && styles.studyCloudTopLeftMobile]} resizeMode="contain" />
+                <Image source={{ uri: cloudSources.broad }} style={[styles.backdropCloud, styles.studyCloudTopRight, isMobile && styles.studyCloudTopRightMobile]} resizeMode="contain" />
+                <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.studyCloudBottom, isMobile && styles.studyCloudBottomMobile]} resizeMode="contain" />
+                <View style={styles.studyMist} />
+              </>
+            ) : null}
+            {backdropMode === 'method' ? (
+              <>
+                <Image source={{ uri: cloudSources.paper }} style={[styles.backdropPaper, isMobile && styles.backdropPaperMobile]} resizeMode="contain" />
+                <Image source={{ uri: cloudSources.spiral }} style={[styles.backdropCloud, styles.methodCloudTop, isMobile && styles.methodCloudTopMobile]} resizeMode="contain" />
+                <Image source={{ uri: cloudSources.broad }} style={[styles.backdropCloud, styles.methodCloudBottom, isMobile && styles.methodCloudBottomMobile]} resizeMode="contain" />
+                <View style={styles.methodMist} />
+              </>
+            ) : null}
           </View>
           {currentPage}
           <SiteFooter navigate={navigate} openExternal={openExternal} />
@@ -1737,6 +1784,119 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 180,
     backgroundColor: 'rgba(201, 150, 82, 0.02)',
+  },
+  studyCloudTopLeft: {
+    position: 'absolute',
+    top: 124,
+    left: -20,
+    width: 210,
+    height: 88,
+    opacity: 0.26,
+    transform: [{ rotate: '-8deg' }],
+  },
+  studyCloudTopLeftMobile: {
+    top: 110,
+    left: -44,
+    width: 155,
+    height: 68,
+    opacity: 0.18,
+  },
+  studyCloudTopRight: {
+    position: 'absolute',
+    top: 78,
+    right: -78,
+    width: 280,
+    height: 102,
+    opacity: 0.22,
+    transform: [{ rotate: '-4deg' }],
+  },
+  studyCloudTopRightMobile: {
+    top: 84,
+    right: -90,
+    width: 190,
+    height: 72,
+    opacity: 0.14,
+  },
+  studyCloudBottom: {
+    position: 'absolute',
+    bottom: 180,
+    right: -10,
+    width: 190,
+    height: 78,
+    opacity: 0.16,
+    transform: [{ rotate: '8deg' }],
+  },
+  studyCloudBottomMobile: {
+    bottom: 160,
+    right: -34,
+    width: 140,
+    height: 58,
+    opacity: 0.1,
+  },
+  studyMist: {
+    position: 'absolute',
+    top: 260,
+    right: -40,
+    width: 180,
+    height: 120,
+    borderRadius: 120,
+    backgroundColor: 'rgba(201, 150, 82, 0.016)',
+  },
+  backdropPaper: {
+    position: 'absolute',
+    top: 86,
+    right: -30,
+    width: 360,
+    height: 260,
+    opacity: 0.34,
+  },
+  backdropPaperMobile: {
+    top: 104,
+    right: -92,
+    width: 250,
+    height: 188,
+    opacity: 0.22,
+  },
+  methodCloudTop: {
+    position: 'absolute',
+    top: 72,
+    left: -26,
+    width: 230,
+    height: 92,
+    opacity: 0.24,
+    transform: [{ rotate: '-6deg' }],
+  },
+  methodCloudTopMobile: {
+    top: 92,
+    left: -44,
+    width: 160,
+    height: 66,
+    opacity: 0.16,
+  },
+  methodCloudBottom: {
+    position: 'absolute',
+    bottom: 130,
+    right: -60,
+    width: 260,
+    height: 104,
+    opacity: 0.18,
+    transform: [{ rotate: '6deg' }],
+  },
+  methodCloudBottomMobile: {
+    bottom: 170,
+    right: -84,
+    width: 180,
+    height: 72,
+    opacity: 0.12,
+  },
+  methodMist: {
+    position: 'absolute',
+    top: 180,
+    left: 80,
+    width: 220,
+    height: 140,
+    borderRadius: 140,
+    backgroundColor: 'rgba(211, 176, 122, 0.018)',
   },
   pageStack: {
     gap: 26,

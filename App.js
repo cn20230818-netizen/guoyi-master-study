@@ -722,7 +722,7 @@ function App() {
       <StatusBar barStyle="light-content" />
       <View style={styles.appShell}>
         <SiteHeader currentPath={path} navigate={navigate} openExternal={openExternal} isMobile={isMobile} />
-        <ScrollView contentContainerStyle={[styles.pageScroll, isWide && styles.pageScrollWide]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.pageScroll, isMobile && styles.pageScrollMobile, isWide && styles.pageScrollWide]} showsVerticalScrollIndicator={false}>
           <View style={styles.backdropLayer}>
             <View style={styles.mountainOne} />
             <View style={styles.mountainTwo} />
@@ -739,6 +739,19 @@ function App() {
 }
 
 function SiteHeader({ currentPath, navigate, openExternal, isMobile }) {
+  const navContent = navItems.map((item) => {
+    const active = item.path ? (item.path === '/' ? currentPath === '/' : currentPath.startsWith(item.path)) : false;
+    return (
+      <Pressable
+        key={item.path || item.external}
+        style={[styles.navLink, active && styles.navLinkActive, isMobile && styles.navLinkMobile]}
+        onPress={() => (item.external ? openExternal(item.external) : navigate(item.path))}
+      >
+        <Text style={[styles.navLinkText, active && styles.navLinkTextActive]}>{item.label}</Text>
+      </Pressable>
+    );
+  });
+
   return (
     <View style={[styles.header, isMobile && styles.headerMobile]}>
       <Pressable style={styles.brandMark} onPress={() => navigate('/')}>
@@ -746,25 +759,18 @@ function SiteHeader({ currentPath, navigate, openExternal, isMobile }) {
           <Text style={styles.brandSealText}>馆</Text>
         </View>
         <View style={styles.brandCopy}>
-          <Text style={styles.brandTitle}>国医大师脑病学术传承馆</Text>
-          <Text style={styles.brandSubTitle}>暗金山水 · 学脉展卷</Text>
+          <Text style={[styles.brandTitle, isMobile && styles.brandTitleMobile]}>国医大师脑病学术传承馆</Text>
+          <Text style={[styles.brandSubTitle, isMobile && styles.brandSubTitleMobile]}>暗金山水 · 学脉展卷</Text>
         </View>
       </Pressable>
 
-      <View style={[styles.navRow, isMobile && styles.navRowMobile]}>
-        {navItems.map((item) => {
-          const active = item.path ? (item.path === '/' ? currentPath === '/' : currentPath.startsWith(item.path)) : false;
-          return (
-            <Pressable
-              key={item.path || item.external}
-              style={[styles.navLink, active && styles.navLinkActive, isMobile && styles.navLinkMobile]}
-              onPress={() => (item.external ? openExternal(item.external) : navigate(item.path))}
-            >
-              <Text style={[styles.navLinkText, active && styles.navLinkTextActive]}>{item.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {isMobile ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navScrollContent} style={styles.navScroll}>
+          <View style={[styles.navRow, styles.navRowMobile]}>{navContent}</View>
+        </ScrollView>
+      ) : (
+        <View style={styles.navRow}>{navContent}</View>
+      )}
     </View>
   );
 }
@@ -1002,7 +1008,7 @@ function StudyPage({
         description="此页用于学术演练。请从缓急、病门、病势、主症与证素五个层次，逐步靠近某一条国医大师脑病路径。"
       />
 
-      <View style={styles.secondaryPanel}>
+      <View style={[styles.secondaryPanel, isMobile && styles.secondaryPanelMobile]}>
         <Text style={styles.panelEyebrow}>学脉选择</Text>
         <Text style={styles.secondaryPanelTitle}>先定所宗之学脉</Text>
         <View style={styles.masterSwitchRow}>
@@ -1023,9 +1029,9 @@ function StudyPage({
         <Text style={styles.secondaryPanelText}>当前研习对象：{master.name}</Text>
       </View>
 
-      <View style={[styles.scrollColumns, isWide && styles.scrollColumnsWide]}>
-        <View style={styles.columnMain}>
-          <View style={styles.primaryPanel}>
+      <View style={[styles.scrollColumns, isWide && styles.scrollColumnsWide, isMobile && styles.scrollColumnsMobile]}>
+        <View style={[styles.columnMain, isMobile && styles.columnMainMobile]}>
+          <View style={[styles.primaryPanel, isMobile && styles.primaryPanelMobile]}>
             <View style={[styles.stepHeaderRow, isMobile && styles.stepHeaderRowMobile]}>
               <View style={styles.stepSeal}>
                 <Text style={styles.stepSealText}>{`0${stepIndex + 1}`.slice(-2)}</Text>
@@ -1044,20 +1050,29 @@ function StudyPage({
               </View>
             </View>
 
-            <View style={[styles.stepRail, isMobile && styles.stepRailMobile]}>
-              {studySteps.map((step, index) => {
-                const active = index === stepIndex;
-                const complete = index < stepIndex;
-                return (
-                  <View key={step.key} style={[styles.stepChip, active && styles.stepChipActive, complete && styles.stepChipComplete]}>
-                    <Text style={[styles.stepChipNumber, (active || complete) && styles.stepChipNumberActive]}>
-                      {`0${index + 1}`.slice(-2)}
-                    </Text>
-                    <Text style={[styles.stepChipText, active && styles.stepChipTextActive]}>{step.nav}</Text>
-                  </View>
-                );
-              })}
-            </View>
+            {isMobile ? (
+              <View style={styles.stepRailMobileCurrent}>
+                <View style={[styles.stepChip, styles.stepChipActive, styles.stepChipMobileCurrent]}>
+                  <Text style={[styles.stepChipNumber, styles.stepChipNumberActive]}>{`0${stepIndex + 1}`.slice(-2)}</Text>
+                  <Text style={[styles.stepChipText, styles.stepChipTextActive]}>{currentStep.nav}</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.stepRail}>
+                {studySteps.map((step, index) => {
+                  const active = index === stepIndex;
+                  const complete = index < stepIndex;
+                  return (
+                    <View key={step.key} style={[styles.stepChip, active && styles.stepChipActive, complete && styles.stepChipComplete]}>
+                      <Text style={[styles.stepChipNumber, (active || complete) && styles.stepChipNumberActive]}>
+                        {`0${index + 1}`.slice(-2)}
+                      </Text>
+                      <Text style={[styles.stepChipText, active && styles.stepChipTextActive]}>{step.nav}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
 
             {renderStudyStep()}
 
@@ -1067,15 +1082,19 @@ function StudyPage({
               </View>
             ) : null}
 
-            <View style={styles.buttonRow}>
-              <SecondaryButton text="上一步" onPress={goPrev} disabled={stepIndex === 0} />
-              <PrimaryButton text={stepIndex === studySteps.length - 1 ? '生成学术路径' : '下一步'} onPress={goNext} />
+            <View style={[styles.buttonRow, isMobile && styles.buttonRowMobile]}>
+              <View style={isMobile && styles.buttonFullWidth}>
+                <SecondaryButton text="上一步" onPress={goPrev} disabled={stepIndex === 0} />
+              </View>
+              <View style={isMobile && styles.buttonFullWidth}>
+                <PrimaryButton text={stepIndex === studySteps.length - 1 ? '生成学术路径' : '下一步'} onPress={goNext} />
+              </View>
             </View>
             <Text style={styles.inlineNote}>当前结果仅反映学习性病机归类，不构成临床处方建议。</Text>
           </View>
         </View>
 
-        <View style={styles.columnSide}>{renderStudyResult()}</View>
+        <View style={[styles.columnSide, isMobile && styles.columnSideMobile]}>{renderStudyResult()}</View>
       </View>
     </View>
   );
@@ -1377,10 +1396,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: fontStacks.serif,
   },
+  brandTitleMobile: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
   brandSubTitle: {
     color: colors.inkSoft,
     fontSize: 12,
     fontFamily: fontStacks.sans,
+  },
+  brandSubTitleMobile: {
+    fontSize: 11,
   },
   navRow: {
     flexDirection: 'row',
@@ -1390,6 +1416,12 @@ const styles = StyleSheet.create({
   },
   navRowMobile: {
     gap: 12,
+  },
+  navScroll: {
+    marginHorizontal: -2,
+  },
+  navScrollContent: {
+    paddingRight: 18,
   },
   navLink: {
     paddingHorizontal: 0,
@@ -1418,6 +1450,11 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 48,
     gap: 28,
+  },
+  pageScrollMobile: {
+    padding: 12,
+    paddingBottom: 32,
+    gap: 18,
   },
   pageScrollWide: {
     alignSelf: 'center',
@@ -1947,13 +1984,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
+  scrollColumnsMobile: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
   columnMain: {
     flex: 1.2,
     gap: 22,
   },
+  columnMainMobile: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
+    width: '100%',
+  },
   columnSide: {
     flex: 0.8,
     gap: 22,
+  },
+  columnSideMobile: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
+    width: '100%',
+    marginTop: 4,
   },
   secondaryPanel: {
     backgroundColor: colors.bgRaised,
@@ -1963,6 +2017,10 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 14,
   },
+  secondaryPanelMobile: {
+    padding: 16,
+    gap: 12,
+  },
   primaryPanel: {
     backgroundColor: colors.card,
     borderWidth: 1,
@@ -1970,6 +2028,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 22,
     gap: 16,
+  },
+  primaryPanelMobile: {
+    padding: 16,
+    gap: 14,
   },
   panelEyebrow: {
     color: colors.gold,
@@ -2205,6 +2267,9 @@ const styles = StyleSheet.create({
   stepRailMobile: {
     gap: 8,
   },
+  stepRailMobileCurrent: {
+    alignItems: 'flex-start',
+  },
   stepChip: {
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -2224,6 +2289,9 @@ const styles = StyleSheet.create({
   stepChipComplete: {
     borderColor: colors.goldSoft,
     backgroundColor: '#261c14',
+  },
+  stepChipMobileCurrent: {
+    minWidth: 0,
   },
   stepChipNumber: {
     color: colors.inkSoft,
@@ -2329,6 +2397,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+  },
+  buttonRowMobile: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 10,
+  },
+  buttonFullWidth: {
+    width: '100%',
   },
   resultStack: {
     gap: 18,

@@ -20,6 +20,9 @@ const siteLinks = {
   github: 'https://github.com/cn20230818-netizen/guoyi-master-study',
 };
 
+const copyrightNotice =
+  '版权说明：本站内容由项目维护者基于公开可核验资料整理。原始论文、期刊页面、机构资料、公开转载医案及其题名、摘要、图片等相关权利归原作者、原期刊、原机构或原发布平台所有。本站仅作学术传承、教学演练与研究浏览使用；如有版权异议、资料更正或下架请求，请联系 cn20230818@gmail.com。';
+
 const navItems = [
   { label: '首页', path: '/' },
   { label: '三家学脉', path: '/masters' },
@@ -1034,6 +1037,11 @@ function MethodPage({ isWide }) {
         ))}
       </View>
 
+      <View style={styles.secondaryPanel}>
+        <Text style={styles.secondaryPanelTitle}>版权说明</Text>
+        <Text style={styles.secondaryPanelText}>{copyrightNotice}</Text>
+      </View>
+
       <View style={styles.buttonRow}>
         <SecondaryButton text="查看隐私与支持" onPress={() => Linking.openURL(siteLinks.support)} />
       </View>
@@ -1191,6 +1199,8 @@ function SiteFooter({ navigate, openExternal }) {
         <Pressable onPress={() => openExternal(siteLinks.support)}><Text style={styles.footerLink}>隐私与支持</Text></Pressable>
         <Pressable onPress={() => openExternal(siteLinks.github)}><Text style={styles.footerLink}>GitHub Repository</Text></Pressable>
       </View>
+      <Text style={styles.footerNote}>版权说明：原始论文、期刊页面、机构资料与公开转载医案等相关权利归原权利人所有，本站仅作学术传承、教学演练与研究浏览使用。</Text>
+      <Text style={styles.footerNote}>如有版权异议、资料更正或下架请求，请联系 cn20230818@gmail.com。</Text>
     </View>
   );
 }
@@ -2042,6 +2052,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
+  },
+  footerNote: {
+    color: colors.inkSoft,
+    fontSize: 13,
+    lineHeight: 22,
+    maxWidth: 980,
   },
   footerLink: {
     color: colors.jade,

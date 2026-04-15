@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { masters, moduleMeta, commonRedflags, orderedMasterIds } from './src/data/catalog';
+import { literatureWatch } from './src/data/literature-watch.generated';
 import { computeResult, createAnswers, getAvailableModules, toggleMultiValue, validateStep } from './src/lib/engine';
 
 const fontStacks = {
@@ -126,6 +127,12 @@ const homeValueCards = [
     text: '每条路径都附公开资料线索，便于继续回看来源，而不是只停留在站内结果。',
   },
 ];
+
+const watchMasterNames = {
+  zhang: '张学文',
+  liu: '刘祖贻',
+  tu: '凃晋文',
+};
 
 const heroMottos = ['脑当为脏', '六辨七治', '痰瘀热风同参'];
 
@@ -290,6 +297,19 @@ function buildFormulaMeaning(master, best, copy) {
   const constitutions = copy.matchedConstitutions.length ? copy.matchedConstitutions.join('、') : '本虚与标实并见';
   const signs = copy.matchedSigns.length ? copy.matchedSigns.join('、') : '当前病门的高频线索';
   return `此路以“${best.therapeutic}”为主轴，用来回应 ${constitutions} 与 ${signs} 所指向的病机组合，重点不在套用成方，而在把病机、治法与方义对应起来。`;
+}
+
+function formatWatchDate(value) {
+  if (!value) {
+    return '日期待核';
+  }
+
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  }
+
+  return value;
 }
 
 function App() {
@@ -782,8 +802,6 @@ function HomePage({ isWide, isTablet, isMobile, navigate }) {
         <View style={styles.heroArtworkFrame}>
           <ImageBackground source={{ uri: artSources.hero }} style={styles.heroArtwork} imageStyle={styles.heroArtworkImage}>
             <View style={styles.heroArtworkTint} />
-            <View style={styles.heroArtworkGoldLine} />
-            <View style={styles.heroArtworkCloud} />
           </ImageBackground>
         </View>
 
@@ -813,8 +831,6 @@ function HomePage({ isWide, isTablet, isMobile, navigate }) {
             <View style={styles.plaqueArtworkFrame}>
               <ImageBackground source={{ uri: artSources.method }} style={styles.plaqueArtwork} imageStyle={styles.plaqueArtworkImage}>
                 <View style={styles.plaqueArtworkTint} />
-                <View style={styles.plaqueArtworkTrace} />
-                <View style={styles.plaqueArtworkTraceShort} />
               </ImageBackground>
             </View>
           </View>
@@ -857,6 +873,8 @@ function HomePage({ isWide, isTablet, isMobile, navigate }) {
         <SecondaryButton text="查看研究方法" onPress={() => navigate('/method')} />
       </View>
 
+      <LiteratureWatchPanel limit={3} />
+
       <SectionHeading eyebrow="Guide" title="如何进入这一卷学问" />
       <View style={[styles.dualGrid, isTablet && styles.dualGridWide]}>
         {homeGuideCards.map((item) => (
@@ -888,6 +906,23 @@ function MastersPage({ isWide, isMobile, navigate }) {
         title="三位国医大师，三种脑病视角"
         description="同为脑病，立论各异。有人以脑立脏，有人重本虚标实，有人长于急慢转换。这里尽可能保留三家各自的学术骨相。"
       />
+
+      <View style={[styles.artworkTriptych, isWide && styles.artworkTriptychWide]}>
+        {orderedMasterIds.map((masterId) => {
+          const visual = masterVisuals[masterId];
+          return (
+            <View key={masterId} style={styles.artworkCard}>
+              <View style={styles.artworkCardFrame}>
+                <ImageBackground source={{ uri: visual.image }} style={styles.artworkCardImage} imageStyle={styles.artworkCardImageStyle}>
+                  <View style={[styles.artworkCardTint, { backgroundColor: `${visual.accent}1f` }]} />
+                </ImageBackground>
+              </View>
+              <Text style={styles.artworkCardTitle}>{masters[masterId].name}</Text>
+              <Text style={styles.artworkCardNote}>{visual.mood} · {visual.line}</Text>
+            </View>
+          );
+        })}
+      </View>
 
       <View style={[styles.tripleGrid, isWide && styles.tripleGridWide]}>
         {orderedMasterIds.map((masterId) => (
@@ -1007,6 +1042,18 @@ function StudyPage({
         title="脑病研习入口"
         description="此页用于学术演练。请从缓急、病门、病势、主症与证素五个层次，逐步靠近某一条国医大师脑病路径。"
       />
+
+      <View style={styles.pageArtworkPanel}>
+        <View style={styles.pageArtworkBandFrame}>
+          <ImageBackground source={{ uri: masterVisuals[studyMasterId].image }} style={styles.pageArtworkBand} imageStyle={styles.pageArtworkBandImage}>
+            <View style={[styles.pageArtworkBandTint, { backgroundColor: `${masterVisuals[studyMasterId].accent}1a` }]} />
+          </ImageBackground>
+        </View>
+        <View style={styles.pageArtworkCaption}>
+          <Text style={styles.pageArtworkCaptionTitle}>{master.name} · {masterVisuals[studyMasterId].artTitle}</Text>
+          <Text style={styles.pageArtworkCaptionText}>题图仅作学术展陈氛围。正文与交互区完全分离，避免图文重叠与操作遮挡。</Text>
+        </View>
+      </View>
 
       <View style={[styles.secondaryPanel, isMobile && styles.secondaryPanelMobile]}>
         <Text style={styles.panelEyebrow}>学脉选择</Text>
@@ -1138,6 +1185,8 @@ function MethodPage({ isWide, isMobile }) {
         ))}
       </View>
 
+      <LiteratureWatchPanel limit={6} />
+
       <View style={styles.secondaryPanel}>
         <Text style={styles.secondaryPanelTitle}>研习次第</Text>
         {homeGuideCards.map((item) => (
@@ -1244,6 +1293,40 @@ function MethodCard({ title, items }) {
       {items.map((item) => (
         <Text key={item} style={styles.methodCardItem}>• {item}</Text>
       ))}
+    </View>
+  );
+}
+
+function LiteratureWatchPanel({ limit = 6 }) {
+  const visibleItems = literatureWatch.items.slice(0, limit);
+
+  return (
+    <View style={styles.secondaryPanel}>
+      <Text style={styles.panelEyebrow}>自动追踪</Text>
+      <Text style={styles.secondaryPanelTitle}>最新公开线索</Text>
+      <Text style={styles.secondaryPanelText}>{literatureWatch.note}</Text>
+      <Text style={styles.secondaryPanelText}>
+        最近生成时间：{literatureWatch.generatedAt ? formatWatchDate(literatureWatch.generatedAt) : '尚未生成'}
+      </Text>
+
+      {visibleItems.length === 0 ? (
+        <Text style={styles.secondaryPanelText}>当前还没有待审核线索。运行更新脚本后，这里会显示最新公开页面与摘要页候选项。</Text>
+      ) : (
+        <View style={styles.evidenceGrid}>
+          {visibleItems.map((item) => (
+            <Pressable key={item.id} style={styles.evidenceCard} onPress={() => Linking.openURL(item.url)}>
+              <View style={styles.evidenceTagRow}>
+                <Text style={styles.evidenceTypeTag}>{watchMasterNames[item.masterId]}</Text>
+                <Text style={styles.evidenceUsageTag}>{item.sourceType}</Text>
+              </View>
+              <Text style={styles.evidenceTitle}>{item.title}</Text>
+              <Text style={styles.evidenceNote}>{item.snippet}</Text>
+              <Text style={styles.evidenceNote}>线索日期：{formatWatchDate(item.publishedAt || item.discoveredAt)}</Text>
+              <Text style={styles.evidenceLink}>查看原文</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -1556,31 +1639,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   heroArtworkImage: {
-    opacity: 0.2,
+    opacity: 0.28,
   },
   heroArtworkTint: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(10, 8, 6, 0.46)',
-  },
-  heroArtworkGoldLine: {
-    position: 'absolute',
-    right: 42,
-    top: 24,
-    width: 220,
-    height: 1,
-    backgroundColor: 'rgba(201, 150, 82, 0.7)',
-    transform: [{ rotate: '-8deg' }],
-  },
-  heroArtworkCloud: {
-    position: 'absolute',
-    right: 28,
-    bottom: 30,
-    width: 150,
-    height: 40,
-    borderRadius: 40,
-    borderWidth: 1,
-    borderColor: 'rgba(201, 150, 82, 0.35)',
-    backgroundColor: 'rgba(15, 11, 9, 0.16)',
   },
   heroGrid: {
     gap: 20,
@@ -1621,29 +1684,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   plaqueArtworkImage: {
-    opacity: 0.22,
+    opacity: 0.3,
   },
   plaqueArtworkTint: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(13, 10, 8, 0.42)',
-  },
-  plaqueArtworkTrace: {
-    position: 'absolute',
-    left: 24,
-    top: 40,
-    width: 170,
-    height: 1,
-    backgroundColor: 'rgba(201, 150, 82, 0.62)',
-    transform: [{ rotate: '12deg' }],
-  },
-  plaqueArtworkTraceShort: {
-    position: 'absolute',
-    left: 64,
-    top: 78,
-    width: 96,
-    height: 1,
-    backgroundColor: 'rgba(201, 150, 82, 0.42)',
-    transform: [{ rotate: '-8deg' }],
   },
   plaqueEyebrow: {
     color: colors.gold,
@@ -1794,6 +1839,45 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontFamily: fontStacks.sans,
   },
+  artworkTriptych: {
+    gap: 16,
+  },
+  artworkTriptychWide: {
+    flexDirection: 'row',
+  },
+  artworkCard: {
+    flex: 1,
+    gap: 10,
+  },
+  artworkCardFrame: {
+    height: 168,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3c2d22',
+    backgroundColor: '#0f0b08',
+  },
+  artworkCardImage: {
+    flex: 1,
+  },
+  artworkCardImageStyle: {
+    opacity: 0.3,
+  },
+  artworkCardTint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  artworkCardTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: fontStacks.serif,
+  },
+  artworkCardNote: {
+    color: colors.inkSoft,
+    fontSize: 13,
+    lineHeight: 21,
+    fontFamily: fontStacks.sans,
+  },
   masterPreviewCard: {
     flex: 1,
     backgroundColor: colors.card,
@@ -1911,6 +1995,42 @@ const styles = StyleSheet.create({
   },
   pageIntro: {
     gap: 8,
+  },
+  pageArtworkPanel: {
+    gap: 12,
+  },
+  pageArtworkBandFrame: {
+    height: 164,
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3c2d22',
+    backgroundColor: '#0f0b08',
+  },
+  pageArtworkBand: {
+    flex: 1,
+  },
+  pageArtworkBandImage: {
+    opacity: 0.28,
+  },
+  pageArtworkBandTint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  pageArtworkCaption: {
+    gap: 4,
+    paddingHorizontal: 2,
+  },
+  pageArtworkCaptionTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: fontStacks.serif,
+  },
+  pageArtworkCaptionText: {
+    color: colors.inkSoft,
+    fontSize: 13,
+    lineHeight: 22,
+    fontFamily: fontStacks.sans,
   },
   pageTitle: {
     color: colors.ink,

@@ -1,5 +1,5 @@
 export const literatureWatch = {
-  "generatedAt": "2026-10-19T05:45:38.717Z",
+  "generatedAt": "2026-10-26T05:47:04.766Z",
   "note": "以下内容来自公开网页检索结果与公开站点页面抓取，仅作为待审核更新线索，不等于已通读封闭数据库全文。",
   "items": []
 };
